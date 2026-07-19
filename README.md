@@ -1,36 +1,86 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# KIET SIH Team Finder
 
-## Getting Started
+Production-grade team matchmaking portal for **Smart India Hackathon (SIH)** at KIET Group of Institutions.
 
-First, run the development server:
+## Features
+
+- KIET domain-restricted authentication (Google OAuth + email OTP)
+- Multi-step onboarding with GitHub skill sync and resume parsing
+- Team creation, invites, join requests, and capacity enforcement
+- Skill-based matching and discovery (public/private teams)
+- Peer reputation ratings (post-season)
+- PDF nomination card export
+- Admin/faculty analytics dashboard
+- Hall of Fame archive with PPT uploads
+
+## Prerequisites
+
+- Node.js 20+
+- A [Supabase](https://supabase.com) project
+- Google OAuth configured in Supabase Auth
+- GitHub OAuth app (optional, for skill verification)
+- Resend account (optional, for admin nudge emails)
+
+## Environment variables
+
+Copy `.env.example` to `.env.local` and fill in values:
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+cp .env.example .env.local
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+| Variable | Required | Description |
+|----------|----------|-------------|
+| `NEXT_PUBLIC_SUPABASE_URL` | Yes | Supabase project URL |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Yes | Supabase anon key |
+| `SUPABASE_SERVICE_ROLE_KEY` | Yes | Service role key (server only) |
+| `NEXT_PUBLIC_GITHUB_CLIENT_ID` | For GitHub sync | GitHub OAuth app client ID |
+| `GITHUB_CLIENT_ID` | For GitHub sync | Same as above (server) |
+| `GITHUB_CLIENT_SECRET` | For GitHub sync | GitHub OAuth secret |
+| `OAUTH_STATE_SECRET` | Recommended | HMAC secret for GitHub OAuth CSRF |
+| `RESEND_API_KEY` | Optional | Enables admin email nudges |
+| `RESEND_FROM_EMAIL` | Optional | Verified sender for Resend |
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Supabase setup
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+1. Run all migrations in `supabase/migrations/` against your project (SQL editor or CLI).
+2. Create storage buckets:
+   - `resumes` (private)
+   - `ppts` (public read)
+3. Enable **Google** and **Email OTP** providers in Supabase Auth.
+4. Add redirect URL: `http://localhost:3000/auth/callback` (and production URL).
+5. Promote a faculty/admin user:
 
-## Learn More
+```sql
+UPDATE public.profiles SET role = 'admin' WHERE kiet_email = 'faculty@kiet.edu';
+```
 
-To learn more about Next.js, take a look at the following resources:
+## Development
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+```bash
+npm install
+npm run dev
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+Open [http://localhost:3000](http://localhost:3000).
 
-## Deploy on Vercel
+## Production
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+```bash
+npm run build
+npm run start
+```
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Deploy to Vercel and set all environment variables in the project settings.
+
+## Security notes
+
+- Route protection runs via Next.js `proxy.ts` (auth + onboarding gate + admin guard).
+- Mutations (teams, requests, leave/disband) go through authenticated API routes with server-side validation.
+- Database triggers enforce one-team-per-student and team capacity limits.
+- GitHub OAuth uses signed state tokens to prevent CSRF.
+- Resume parsing and PPT upload endpoints require authentication.
+
+## License
+
+Internal use — KIET Group of Institutions.

@@ -1,0 +1,28 @@
+export const SKILL_CATALOG: { name: string; category: string }[] = [
+  { name: "React", category: "Frontend" },
+  { name: "Next.js", category: "Frontend" },
+  { name: "TypeScript", category: "Frontend" },
+  { name: "Tailwind CSS", category: "Frontend" },
+  { name: "Vue.js", category: "Frontend" },
+  { name: "Node.js", category: "Backend" },
+  { name: "Express", category: "Backend" },
+  { name: "Python", category: "Backend" },
+  { name: "Django", category: "Backend" },
+  { name: "FastAPI", category: "Backend" },
+  { name: "Java", category: "Backend" },
+  { name: "PyTorch", category: "ML" },
+  { name: "TensorFlow", category: "ML" },
+  { name: "Scikit-learn", category: "ML" },
+  { name: "Figma", category: "Design" },
+  { name: "PostgreSQL", category: "Database" },
+  { name: "MongoDB", category: "Database" },
+  { name: "Redis", category: "Database" },
+  { name: "Docker", category: "DevOps" },
+  { name: "AWS", category: "DevOps" },
+  { name: "Git", category: "Tools" },
+  { name: "C++", category: "Systems" },
+  { name: "Arduino", category: "Hardware" },
+  { name: "IoT", category: "Hardware" },
+];
+
+export const RESUME_SKILL_NAMES = SKILL_CATALOG.map((s) => s.name);
