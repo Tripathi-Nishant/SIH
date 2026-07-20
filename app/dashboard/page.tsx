@@ -655,55 +655,54 @@ export default function DashboardPage() {
                     ))}
                   </div>
                 )}
-              </div>
+                {/* ── Composition-Targeted Discovery (female students only) ──── */}
+                {compositionMatchTeams.length > 0 && (
+                  <div className="mt-6 space-y-4">
+                    <div>
+                      <h3 className="text-lg font-bold text-white flex items-center gap-2">
+                        <Star className="h-5 w-5 text-amber-400" /> Teams That Need Your Skills + Composition
+                      </h3>
+                      <p className="text-xs text-gray-400 mt-1">
+                        These open teams match your skills <span className="text-amber-300">and</span> still need to fulfil the mandatory female-member requirement. Your skills are the primary match — you are never just filling a slot.
+                      </p>
+                    </div>
 
-              {/* ── Composition-Targeted Discovery (female students only) ──── */}
-              {compositionMatchTeams.length > 0 && (
-                <div className="mt-6 space-y-4">
-                  <div>
-                    <h3 className="text-lg font-bold text-white flex items-center gap-2">
-                      <Star className="h-5 w-5 text-amber-400" /> Teams That Need Your Skills + Composition
-                    </h3>
-                    <p className="text-xs text-gray-400 mt-1">
-                      These open teams match your skills <span className="text-amber-300">and</span> still need to fulfil the mandatory female-member requirement. Your skills are the primary match — you are never just filling a slot.
-                    </p>
-                  </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {compositionMatchTeams.slice(0, 6).map((t) => (
+                        <div key={t.id} className="glass p-5 rounded-2xl border border-amber-500/20 hover:border-amber-400/50 transition-all flex flex-col justify-between">
+                          <div>
+                            <div className="flex items-center gap-2">
+                              <span className="text-[9px] font-bold bg-amber-500/10 text-amber-400 px-1.5 py-0.5 rounded">SKILL + COMPOSITION MATCH</span>
+                            </div>
+                            <h4 className="text-base font-bold text-white mt-2">{t.name}</h4>
+                            <p className="text-xs text-gray-400 mt-1 line-clamp-1">{t.problem_statement_title}</p>
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {compositionMatchTeams.slice(0, 6).map((t) => (
-                      <div key={t.id} className="glass p-5 rounded-2xl border border-amber-500/20 hover:border-amber-400/50 transition-all flex flex-col justify-between">
-                        <div>
-                          <div className="flex items-center gap-2">
-                            <span className="text-[9px] font-bold bg-amber-500/10 text-amber-400 px-1.5 py-0.5 rounded">SKILL + COMPOSITION MATCH</span>
-                          </div>
-                          <h4 className="text-base font-bold text-white mt-2">{t.name}</h4>
-                          <p className="text-xs text-gray-400 mt-1 line-clamp-1">{t.problem_statement_title}</p>
-
-                          <div className="mt-4 space-y-2">
-                            <span className="text-[10px] font-semibold text-gray-300 block">Skill Vacancies:</span>
-                            <div className="flex flex-wrap gap-1.5">
-                              {t.required_skills_json.map((slot, idx) => (
-                                <span key={idx} className="text-[9px] font-medium px-2 py-0.5 rounded bg-amber-500/10 text-amber-300 border border-amber-500/20">
-                                  {slot.role} ({slot.skill})
-                                </span>
-                              ))}
+                            <div className="mt-4 space-y-2">
+                              <span className="text-[10px] font-semibold text-gray-300 block">Skill Vacancies:</span>
+                              <div className="flex flex-wrap gap-1.5">
+                                {t.required_skills_json.map((slot, idx) => (
+                                  <span key={idx} className="text-[9px] font-medium px-2 py-0.5 rounded bg-amber-500/10 text-amber-300 border border-amber-500/20">
+                                    {slot.role} ({slot.skill})
+                                  </span>
+                                ))}
+                              </div>
                             </div>
                           </div>
-                        </div>
 
-                        <div className="mt-6 flex justify-between items-center">
-                          <button
-                            onClick={() => router.push(`/teams/${t.id}`)}
-                            className="text-xs font-semibold text-amber-400 hover:underline flex items-center gap-1"
-                          >
-                            View details <ExternalLink className="h-3.5 w-3.5" />
-                          </button>
+                          <div className="mt-6 flex justify-between items-center">
+                            <button
+                              onClick={() => router.push(`/teams/${t.id}`)}
+                              className="text-xs font-semibold text-amber-400 hover:underline flex items-center gap-1"
+                            >
+                              View details <ExternalLink className="h-3.5 w-3.5" />
+                            </button>
+                          </div>
                         </div>
-                      </div>
-                    ))}
+                      ))}
+                    </div>
                   </div>
-                </div>
-              )}
+                )}
+              </div>
             )}
             
           </div>
