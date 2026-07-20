@@ -22,6 +22,8 @@ function OnboardContent() {
   const [linkedinUrl, setLinkedinUrl] = useState("");
   const [portfolioUrl, setPortfolioUrl] = useState("");
   const [rolePreference, setRolePreference] = useState<'member' | 'leader' | 'both'>('both');
+  const [gender, setGender] = useState<string>("");
+  const [openToInvites, setOpenToInvites] = useState<boolean>(true);
 
   // GitHub integration
   const [githubUser, setGithubUser] = useState("");
@@ -53,6 +55,8 @@ function OnboardContent() {
       setBio(loggedUser.bio || "");
       setRolePreference(loggedUser.role_preference || "both");
       setGithubUser(loggedUser.github_username || "");
+      setGender(loggedUser.gender || "");
+      setOpenToInvites(loggedUser.open_to_invites !== false);
 
       // Check URL query parameters for GitHub sync callback status
       const githubStatus = searchParams.get("github_sync");
@@ -196,6 +200,8 @@ function OnboardContent() {
       role_preference: rolePreference,
       github_verified: githubSynced,
       profile_completeness: 100,
+      gender: (gender as Profile["gender"]) || undefined,
+      open_to_invites: openToInvites,
     };
     await MockDB.saveProfile(updatedProfile);
 
@@ -370,6 +376,49 @@ function OnboardContent() {
                     {role === 'both' ? 'Looking for Both' : `Looking as ${role}`}
                   </button>
                 ))}
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="space-y-1.5">
+                <label className="text-xs font-semibold text-gray-300">
+                  Gender{" "}
+                  <span className="text-gray-500 font-normal">(Optional, self-disclosed)</span>
+                </label>
+                <select
+                  value={gender}
+                  onChange={(e) => setGender(e.target.value)}
+                  className="w-full bg-[#0a0f1d] border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-[#f97316] transition-colors"
+                >
+                  <option value="">Prefer not to say</option>
+                  <option value="female">Female</option>
+                  <option value="male">Male</option>
+                  <option value="other">Other / Non-binary</option>
+                </select>
+                <p className="text-[10px] text-gray-500 leading-4">
+                  Used only to match you with teams seeking to complete their required composition. Never shown on your public profile or used as a search filter by others.
+                </p>
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="text-xs font-semibold text-gray-300">Invite Availability</label>
+                <button
+                  type="button"
+                  onClick={() => setOpenToInvites(!openToInvites)}
+                  className={`w-full py-2 px-3 rounded-lg border text-xs font-semibold transition-all flex items-center justify-between ${
+                    openToInvites
+                      ? "bg-[#10b981]/10 border-[#10b981]/40 text-[#10b981]"
+                      : "bg-white/5 border-white/10 text-gray-400"
+                  }`}
+                >
+                  <span>{openToInvites ? "Open to team invites" : "Not accepting invites"}</span>
+                  <span className={`h-4 w-8 rounded-full transition-colors flex items-center ${openToInvites ? "bg-[#10b981]" : "bg-white/20"}`}>
+                    <span className={`h-3 w-3 rounded-full bg-white mx-0.5 transition-transform ${openToInvites ? "translate-x-4" : "translate-x-0"}`} />
+                  </span>
+                </button>
+                <p className="text-[10px] text-gray-500 leading-4">
+                  Disable this if you are already on a team or do not wish to receive invites.
+                </p>
               </div>
             </div>
           </div>

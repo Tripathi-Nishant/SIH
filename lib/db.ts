@@ -18,6 +18,8 @@ export interface Profile {
   avatar_url?: string;
   auth_provider?: string;
   role?: "student" | "faculty" | "admin";
+  gender?: "male" | "female" | "other";
+  open_to_invites?: boolean;
 }
 
 export interface Skill {
@@ -65,6 +67,8 @@ export interface Request {
   pitch_note: string;
   created_at: string;
   responded_at?: string;
+  fills_gender_requirement?: boolean;
+  target_skill_id?: string;
 }
 
 export interface Rating {
@@ -156,6 +160,12 @@ export class MockDB {
     const { data, error } = await supabase.from("requests").select("*");
     if (error || !data) return [];
     return data as Request[];
+  }
+
+  static async getReports(): Promise<any[]> {
+    const { data, error } = await supabase.from("user_reports").select("*");
+    if (error || !data) return [];
+    return data;
   }
 
   static async saveProfile(profile: Profile) {
@@ -257,6 +267,17 @@ export class MockDB {
     await apiRequest("/api/requests", {
       method: "PATCH",
       body: JSON.stringify({ request_id: requestId, status }),
+    });
+  }
+
+  static async reportOrBlockInvite(
+    requestId: string,
+    action: "report" | "block",
+    reason?: string
+  ): Promise<{ blocked: boolean; reported: boolean; message: string }> {
+    return apiRequest("/api/requests/report", {
+      method: "POST",
+      body: JSON.stringify({ request_id: requestId, action, reason }),
     });
   }
 

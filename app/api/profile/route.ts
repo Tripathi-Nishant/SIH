@@ -20,6 +20,8 @@ export async function PATCH(request: NextRequest) {
     "role_preference",
     "profile_completeness",
     "github_verified",
+    "gender",
+    "open_to_invites",
   ] as const;
 
   const updates: Record<string, unknown> = {};

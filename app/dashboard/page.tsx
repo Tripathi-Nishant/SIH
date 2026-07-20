@@ -5,8 +5,9 @@ import { useRouter } from "next/navigation";
 import { MockDB, Profile, Team, TeamMember, Request, UserSkill, Skill } from "@/lib/db";
 import Navbar from "@/components/Navbar";
 import { 
-  Users, Award, PlusCircle, Check, X, FileText, 
-  ExternalLink, Send, AlertTriangle, Info, Trash2
+  Users, Award, PlusCircle, Check, X, FileText,
+  ExternalLink, AlertTriangle, Info, Trash2,
+  ShieldAlert, Flag, Star
 } from "lucide-react";
 
 export default function DashboardPage() {
@@ -49,6 +50,15 @@ export default function DashboardPage() {
   const [showInviteModal, setShowInviteModal] = useState(false);
   const [inviteUserId, setInviteUserId] = useState("");
   const [invitePitch, setInvitePitch] = useState("");
+  const [inviteTargetSkillId, setInviteTargetSkillId] = useState("");
+  const [inviteFillsGender, setInviteFillsGender] = useState(false);
+
+  // Teams that need composition requirement AND match current user's skills
+  const [compositionMatchTeams, setCompositionMatchTeams] = useState<Team[]>([]);
+
+  // Report/block modal
+  const [reportModal, setReportModal] = useState<{ requestId: string; senderName: string } | null>(null);
+  const [reportReason, setReportReason] = useState("");
 
   const refreshData = async () => {
     setLoading(true);
@@ -114,6 +124,43 @@ export default function DashboardPage() {
         });
       });
       setRecommendedTeams(matches);
+
+      // ── Composition-targeted discovery (female students only) ──────────────
+      // Only shown to students who have self-disclosed as female.
+      // Teams shown are those that still have no female member, ranked by skill fit.
+      if (loggedUser.gender === 'female') {
+        const teamMembersByTeam = new Map<string, string[]>();
+        members.forEach(m => {
+          const arr = teamMembersByTeam.get(m.team_id) || [];
+          arr.push(m.user_id);
+          teamMembersByTeam.set(m.team_id, arr);
+        });
+
+        const compMatches = teams
+          .filter(t => {
+            if (t.status !== 'open') return false;
+            // Check if team has no female member yet
+            const memberIds = teamMembersByTeam.get(t.id) || [];
+            const hasFemaleMember = memberIds.some(uid => {
+              const p = profiles.find(pr => pr.id === uid);
+              return p?.gender === 'female';
+            });
+            return !hasFemaleMember;
+          })
+          .map(t => {
+            // Score by how many of the team's required skills match this student
+            const skillMatches = t.required_skills_json.filter(slot => {
+              const matchedSkill = skills.find(s => s.name === slot.skill);
+              return matchedSkill && mySkillIds.includes(matchedSkill.id);
+            }).length;
+            return { team: t, skillMatches };
+          })
+          .filter(({ skillMatches }) => skillMatches > 0)   // must match at least one skill
+          .sort((a, b) => b.skillMatches - a.skillMatches)  // rank by skill overlap desc
+          .map(({ team }) => team);
+
+        setCompositionMatchTeams(compMatches);
+      }
     } else {
       const myTeam = teams.find(t => t.id === teamId);
       if (myTeam && myTeam.leader_id === loggedUser.id) {
@@ -255,18 +302,46 @@ export default function DashboardPage() {
     e.preventDefault();
     if (!user || !team || !inviteUserId) return;
 
-    await MockDB.sendRequest({
-      sender_id: user.id,
-      receiver_id: inviteUserId,
-      team_id: team.id,
-      type: 'invite',
-      pitch_note: invitePitch || "Hey, we would love to have you in our SIH team based on your profile skills!"
-    });
+    try {
+      await MockDB.sendRequest({
+        sender_id: user.id,
+        receiver_id: inviteUserId,
+        team_id: team.id,
+        type: 'invite',
+        pitch_note: invitePitch || "We'd love to have you in our SIH team — your skills are a great match for an open slot!",
+        fills_gender_requirement: inviteFillsGender,
+        target_skill_id: inviteTargetSkillId || undefined,
+      });
+      setShowInviteModal(false);
+      setInviteUserId("");
+      setInvitePitch("");
+      setInviteTargetSkillId("");
+      setInviteFillsGender(false);
+      await refreshData();
+    } catch (err: any) {
+      alert(err?.message || "Failed to send invite.");
+    }
+  };
 
-    setShowInviteModal(false);
-    setInviteUserId("");
-    setInvitePitch("");
-    await refreshData();
+  const handleReportOrBlock = async (action: "report" | "block") => {
+    if (!reportModal) return;
+    if (action === "report" && !reportReason.trim()) {
+      alert("Please provide a reason for the report.");
+      return;
+    }
+    try {
+      const result = await MockDB.reportOrBlockInvite(
+        reportModal.requestId,
+        action,
+        action === "report" ? reportReason : undefined
+      );
+      alert(result.message);
+      setReportModal(null);
+      setReportReason("");
+      await refreshData();
+    } catch (err: any) {
+      alert(err?.message || "Action failed.");
+    }
   };
 
   const getUserSkillsString = (userId: string) => {
@@ -430,6 +505,37 @@ export default function DashboardPage() {
                         );
                       })}
                     </div>
+
+                    {/* ── Composition Requirement Slot (≥1 female member) ────── */}
+                    {(() => {
+                      const hasFemale = teamMembers.some(m => m.gender === 'female');
+                      return (
+                        <div
+                          className={`mt-3 p-3 rounded-xl border flex items-center justify-between transition-colors ${
+                            hasFemale
+                              ? "bg-[#10b981]/5 border-[#10b981]/20 text-[#10b981]"
+                              : "bg-amber-500/5 border-amber-500/20 text-amber-300"
+                          }`}
+                        >
+                          <div className="flex items-center gap-2">
+                            <Users className="h-3.5 w-3.5" />
+                            <div>
+                              <span className="block text-xs font-bold">Team Composition Rule</span>
+                              <span className="block text-[10px] opacity-80">
+                                SIH requires at least 1 female member per team
+                              </span>
+                            </div>
+                          </div>
+                          <span
+                            className={`text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded ${
+                              hasFemale ? "bg-black/30" : "bg-amber-900/40 animate-pulse"
+                            }`}
+                          >
+                            {hasFemale ? "Fulfilled" : "Required"}
+                          </span>
+                        </div>
+                      );
+                    })()}
                   </div>
 
                   <div>
@@ -550,6 +656,54 @@ export default function DashboardPage() {
                   </div>
                 )}
               </div>
+
+              {/* ── Composition-Targeted Discovery (female students only) ──── */}
+              {compositionMatchTeams.length > 0 && (
+                <div className="mt-6 space-y-4">
+                  <div>
+                    <h3 className="text-lg font-bold text-white flex items-center gap-2">
+                      <Star className="h-5 w-5 text-amber-400" /> Teams That Need Your Skills + Composition
+                    </h3>
+                    <p className="text-xs text-gray-400 mt-1">
+                      These open teams match your skills <span className="text-amber-300">and</span> still need to fulfil the mandatory female-member requirement. Your skills are the primary match — you are never just filling a slot.
+                    </p>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {compositionMatchTeams.slice(0, 6).map((t) => (
+                      <div key={t.id} className="glass p-5 rounded-2xl border border-amber-500/20 hover:border-amber-400/50 transition-all flex flex-col justify-between">
+                        <div>
+                          <div className="flex items-center gap-2">
+                            <span className="text-[9px] font-bold bg-amber-500/10 text-amber-400 px-1.5 py-0.5 rounded">SKILL + COMPOSITION MATCH</span>
+                          </div>
+                          <h4 className="text-base font-bold text-white mt-2">{t.name}</h4>
+                          <p className="text-xs text-gray-400 mt-1 line-clamp-1">{t.problem_statement_title}</p>
+
+                          <div className="mt-4 space-y-2">
+                            <span className="text-[10px] font-semibold text-gray-300 block">Skill Vacancies:</span>
+                            <div className="flex flex-wrap gap-1.5">
+                              {t.required_skills_json.map((slot, idx) => (
+                                <span key={idx} className="text-[9px] font-medium px-2 py-0.5 rounded bg-amber-500/10 text-amber-300 border border-amber-500/20">
+                                  {slot.role} ({slot.skill})
+                                </span>
+                              ))}
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="mt-6 flex justify-between items-center">
+                          <button
+                            onClick={() => router.push(`/teams/${t.id}`)}
+                            className="text-xs font-semibold text-amber-400 hover:underline flex items-center gap-1"
+                          >
+                            View details <ExternalLink className="h-3.5 w-3.5" />
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
             )}
             
           </div>
@@ -663,6 +817,13 @@ export default function DashboardPage() {
                                 title="Reject"
                               >
                                 <X className="h-3 w-3" />
+                              </button>
+                              <button
+                                onClick={() => setReportModal({ requestId: req.id, senderName: sender?.name || "a user" })}
+                                className="p-1 text-gray-400 hover:text-red-400 hover:bg-white/10 border border-white/10 hover:border-red-500/40 rounded ml-2"
+                                title="Report or Block sender"
+                              >
+                                <Flag className="h-3 w-3" />
                               </button>
                             </div>
                           )}
@@ -999,6 +1160,61 @@ export default function DashboardPage() {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {reportModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm">
+          <div className="glass w-full max-w-md rounded-2xl border border-white/15 p-6 relative">
+            <h3 className="text-lg font-bold text-white mb-2 flex items-center gap-2">
+              <ShieldAlert className="h-5 w-5 text-red-500" /> Report or Block User
+            </h3>
+            <p className="text-xs text-gray-400 mb-4">
+              Are you receiving unsolicited or inappropriate requests from <strong>{reportModal.senderName}</strong>?
+            </p>
+
+            <div className="space-y-4">
+              <div className="space-y-1">
+                <label className="text-xs font-semibold text-gray-300">Reason for reporting (Required for Report)</label>
+                <textarea
+                  rows={3}
+                  value={reportReason}
+                  onChange={(e) => setReportReason(e.target.value)}
+                  placeholder="Explain why this request is inappropriate..."
+                  className="w-full bg-[#0a0f1d] border border-white/10 rounded-lg px-3 py-2 text-xs text-white focus:outline-none resize-none"
+                />
+              </div>
+
+              <div className="flex flex-col gap-2">
+                <button
+                  onClick={() => handleReportOrBlock("block")}
+                  className="w-full py-2 bg-red-950/40 border border-red-500/30 hover:bg-red-900/50 text-red-300 rounded-lg text-xs font-semibold text-left px-4"
+                >
+                  <span className="block text-white font-bold mb-0.5">Block {reportModal.senderName}</span>
+                  <span className="opacity-80">They won't be able to send you any more requests.</span>
+                </button>
+                <button
+                  onClick={() => handleReportOrBlock("report")}
+                  className="w-full py-2 bg-orange-950/40 border border-orange-500/30 hover:bg-orange-900/50 text-orange-300 rounded-lg text-xs font-semibold text-left px-4"
+                >
+                  <span className="block text-white font-bold mb-0.5">Report {reportModal.senderName} to Admins</span>
+                  <span className="opacity-80">Flag this user for admin review. Also blocks them.</span>
+                </button>
+              </div>
+
+              <div className="flex justify-end gap-3 pt-2">
+                <button
+                  onClick={() => {
+                    setReportModal(null);
+                    setReportReason("");
+                  }}
+                  className="px-4 py-2 border border-white/10 rounded-lg text-xs font-semibold text-gray-400 hover:text-white"
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       )}

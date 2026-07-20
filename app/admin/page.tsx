@@ -15,6 +15,7 @@ export default function AdminPage() {
   const [skills, setSkills] = useState<Skill[]>([]);
   const [userSkills, setUserSkills] = useState<UserSkill[]>([]);
   const [members, setMembers] = useState<TeamMember[]>([]);
+  const [reports, setReports] = useState<any[]>([]);
   const [seasonConcluded, setSeasonConcluded] = useState(false);
 
   const loadAdminData = async () => {
@@ -33,12 +34,14 @@ export default function AdminPage() {
     const skillsData = await MockDB.getSkills();
     const userSkillsData = await MockDB.getUserSkills();
     const membersData = await MockDB.getTeamMembers();
+    const reportsData = await MockDB.getReports();
 
     setTeams(teamsData);
     setProfiles(profilesData);
     setSkills(skillsData);
     setUserSkills(userSkillsData);
     setMembers(membersData);
+    setReports(reportsData);
   };
 
   useEffect(() => {
@@ -87,6 +90,23 @@ export default function AdminPage() {
   const matchedStudentsCount = new Set(members.map(m => m.user_id)).size;
   const unmatchedStudentsCount = totalStudentsCount - matchedStudentsCount;
   const totalTeamsCount = teams.length;
+
+  const maleCount = profiles.filter(p => p.gender === 'male').length;
+  const femaleCount = profiles.filter(p => p.gender === 'female').length;
+
+  let teamsMissingFemale = 0;
+  teams.forEach(t => {
+    const teamMembers = members.filter(m => m.team_id === t.id);
+    const hasFemale = teamMembers.some(tm => {
+      const p = profiles.find(pr => pr.id === tm.user_id);
+      return p?.gender === 'female';
+    });
+    if (!hasFemale && t.status === 'open') {
+      teamsMissingFemale++;
+    }
+  });
+
+  const flaggedInvitesCount = reports.length;
 
   const skillCountMap: { [key: string]: number } = { Frontend: 0, Backend: 0, ML: 0, Database: 0, Design: 0 };
   userSkills.forEach(us => {
@@ -153,6 +173,45 @@ export default function AdminPage() {
             <span className="text-[10px] font-bold text-red-400 block tracking-wider uppercase">Unmatched Pool</span>
             <span className="text-3xl font-black text-red-400 block mt-1">{unmatchedStudentsCount}</span>
             <p className="text-[10px] text-gray-500 mt-1">Need pairing assistance</p>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+          <div className="glass p-5 rounded-2xl border border-blue-500/20 text-blue-200">
+             <h3 className="text-sm font-bold flex items-center gap-2">
+                Gender Ratio
+             </h3>
+             <div className="mt-3 flex items-center gap-4">
+                <div>
+                   <span className="text-2xl font-black text-white">{femaleCount}</span>
+                   <span className="text-[10px] text-blue-300 block">Female</span>
+                </div>
+                <div className="h-8 w-px bg-blue-500/30"></div>
+                <div>
+                   <span className="text-2xl font-black text-white">{maleCount}</span>
+                   <span className="text-[10px] text-blue-300 block">Male</span>
+                </div>
+             </div>
+          </div>
+
+          <div className="glass p-5 rounded-2xl border border-amber-500/20 text-amber-200">
+             <h3 className="text-sm font-bold flex items-center gap-2">
+                Composition Rule
+             </h3>
+             <div className="mt-3">
+                 <span className="text-2xl font-black text-white">{teamsMissingFemale}</span>
+                 <span className="text-[10px] text-amber-300 block">Teams missing female member</span>
+             </div>
+          </div>
+
+          <div className="glass p-5 rounded-2xl border border-red-500/20 text-red-200">
+             <h3 className="text-sm font-bold flex items-center gap-2">
+                Moderation Alerts
+             </h3>
+             <div className="mt-3">
+                 <span className="text-2xl font-black text-white">{flaggedInvitesCount}</span>
+                 <span className="text-[10px] text-red-300 block">Reported/flagged invites</span>
+             </div>
           </div>
         </div>
 
