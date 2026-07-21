@@ -175,9 +175,9 @@ function OnboardContent() {
         return;
       }
       
-      // KIET Roll numbers are strictly 13 digits 
-      if (!/^\d{15}$/.test(rollNo.trim())) {
-        alert("Roll Number must be exactly 15 digits (e.g. 202401100200215).");
+      // KIET Roll numbers are typically 13 digits (allowing 10-15 for flexibility)
+      if (!/^\d{10,15}$/.test(rollNo.trim())) {
+        alert("Roll Number must be between 10 and 15 digits.");
         return;
       }
     }

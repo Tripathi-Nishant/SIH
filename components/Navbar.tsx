@@ -7,7 +7,7 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
 import { MockDB, Profile } from "@/lib/db";
 import { isAdminUser } from "@/lib/admin";
-import { LogOut, User, Users, Search, Award, ShieldAlert, AlertTriangle, Menu, X as CloseIcon } from "lucide-react";
+import { LogOut, User, Users, Search, Award, ShieldAlert, AlertTriangle, Menu, X as CloseIcon, LayoutDashboard, UserCircle } from "lucide-react";
 
 export default function Navbar() {
   const router = useRouter();
@@ -34,8 +34,10 @@ export default function Navbar() {
   };
 
   const navItems = [
-    { name: "Dashboard", href: "/dashboard", icon: Users },
+    { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
     { name: "Browse", href: "/browse", icon: Search },
+    { name: "Team Finder", href: "/teams", icon: Users },
+    { name: "My Profile", href: "/profile", icon: UserCircle },
     { name: "Hall of Fame", href: "/hall-of-fame", icon: Award },
   ];
 

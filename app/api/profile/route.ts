@@ -29,9 +29,9 @@ export async function PATCH(request: NextRequest) {
     if (body[field] !== undefined) updates[field] = body[field];
   }
 
-  if (updates.roll_no && !/^\d{13}$/.test(String(updates.roll_no))) {
+  if (updates.roll_no && !/^\d{10,15}$/.test(String(updates.roll_no))) {
     return NextResponse.json(
-      { error: "Roll number must be exactly 13 digits" },
+      { error: "Roll number must be between 10 and 15 digits" },
       { status: 400 }
     );
   }
