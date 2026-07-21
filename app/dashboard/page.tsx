@@ -7,7 +7,7 @@ import Navbar from "@/components/Navbar";
 import { 
   Users, Award, PlusCircle, Check, X, FileText,
   ExternalLink, AlertTriangle, Info, Trash2,
-  ShieldAlert, Flag, Star
+  ShieldAlert, Flag, Star, Send
 } from "lucide-react";
 
 export default function DashboardPage() {
