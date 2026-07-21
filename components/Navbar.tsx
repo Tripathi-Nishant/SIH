@@ -81,11 +81,10 @@ export default function Navbar() {
                 <Link
                   key={item.href}
                   href={item.href}
-                  className={`flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
-                    isActive
+                  className={`flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-colors ${isActive
                       ? "text-[#f97316] bg-[#f97316]/10"
                       : "text-gray-300 hover:text-white hover:bg-white/5"
-                  }`}
+                    }`}
                 >
                   <Icon className="h-4 w-4" />
                   {item.name}
@@ -95,18 +94,17 @@ export default function Navbar() {
             {isAdmin && (
               <Link
                 href="/admin"
-                className={`flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
-                  pathname === "/admin"
+                className={`flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-colors ${pathname === "/admin"
                     ? "text-[#eab308] bg-[#eab308]/10"
                     : "text-gray-300 hover:text-[#eab308] hover:bg-[#eab308]/5"
-                }`}
+                  }`}
               >
                 <ShieldAlert className="h-4 w-4" />
                 Admin Panel
               </Link>
             )}
             <a
-              href="mailto:sih-support@kiet.edu?subject=SIH%20Team%20Finder%20Feedback"
+              href="mailto:tripathinishant498@gmail.com"
               className="flex items-center gap-1.5 px-3 py-2 rounded-md text-xs font-semibold text-gray-400 hover:text-white transition-colors"
             >
               <AlertTriangle className="h-3.5 w-3.5" /> Report Issue
@@ -181,11 +179,10 @@ export default function Navbar() {
                 key={item.href}
                 href={item.href}
                 onClick={() => setMobileMenuOpen(false)}
-                className={`flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
-                  isActive
+                className={`flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium transition-colors ${isActive
                     ? "text-[#f97316] bg-[#f97316]/10"
                     : "text-gray-300 hover:text-white hover:bg-white/5"
-                }`}
+                  }`}
               >
                 <Icon className="h-4 w-4" />
                 {item.name}
@@ -196,11 +193,10 @@ export default function Navbar() {
             <Link
               href="/admin"
               onClick={() => setMobileMenuOpen(false)}
-              className={`flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
-                pathname === "/admin"
+              className={`flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium transition-colors ${pathname === "/admin"
                   ? "text-[#eab308] bg-[#eab308]/10"
                   : "text-gray-300 hover:text-[#eab308]"
-              }`}
+                }`}
             >
               <ShieldAlert className="h-4 w-4" />
               Admin Panel
