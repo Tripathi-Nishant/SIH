@@ -233,6 +233,7 @@ export default function ProfilePage() {
                     <option value="">Prefer not to say</option>
                     <option value="male">Male</option>
                     <option value="female">Female</option>
+                    <option value="other">Other / Non-binary</option>
                   </select>
                 </div>
                 

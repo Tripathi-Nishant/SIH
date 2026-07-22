@@ -3,8 +3,9 @@
 import { useEffect, useState, use } from "react";
 import { useRouter } from "next/navigation";
 import { MockDB, Profile, Team, UserSkill, Skill } from "@/lib/db";
+import { isAdminUser } from "@/lib/admin";
 import Navbar from "@/components/Navbar";
-import { ArrowLeft, Send, AlertCircle } from "lucide-react";
+import { ArrowLeft, Send, AlertCircle, Edit2, Trash2, Save } from "lucide-react";
 
 interface PageProps {
   params: Promise<{ id: string }>;
@@ -20,6 +21,12 @@ export default function TeamDetailPage({ params }: PageProps) {
   const [skills, setSkills] = useState<Skill[]>([]);
   const [userSkills, setUserSkills] = useState<UserSkill[]>([]);
   const [isUserInAnyTeam, setIsUserInAnyTeam] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [editName, setEditName] = useState("");
+  const [editPsTitle, setEditPsTitle] = useState("");
+  const [editPsDomain, setEditPsDomain] = useState("");
+  const [editVisibility, setEditVisibility] = useState<"public" | "private">("public");
+  const [editCapacity, setEditCapacity] = useState(6);
 
   // Join pitch note state
   const [pitch, setPitch] = useState("");
@@ -41,6 +48,11 @@ export default function TeamDetailPage({ params }: PageProps) {
       
       if (foundTeam) {
         setTeam(foundTeam);
+        setEditName(foundTeam.name);
+        setEditPsTitle(foundTeam.problem_statement_title || "");
+        setEditPsDomain(foundTeam.problem_statement_domain || "");
+        setEditVisibility(foundTeam.visibility || "public");
+        setEditCapacity(foundTeam.capacity || 6);
         
         const allMembers = await MockDB.getTeamMembers();
         const teamMems = allMembers
@@ -58,6 +70,43 @@ export default function TeamDetailPage({ params }: PageProps) {
     }
     loadData();
   }, [id]);
+
+  const canManageTeam = !!user && !!team && (team.leader_id === user.id || isAdminUser(user));
+
+  const handleSaveTeam = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!team) return;
+
+    try {
+      await MockDB.updateTeam(team.id, {
+        name: editName,
+        problem_statement_title: editPsTitle,
+        problem_statement_domain: editPsDomain,
+        capacity: editCapacity,
+        visibility: editVisibility,
+      });
+      setShowEditModal(false);
+      const teamsData = await MockDB.getTeams();
+      const updatedTeam = teamsData.find(t => t.id === team.id);
+      if (updatedTeam) setTeam(updatedTeam);
+      alert("Team updated successfully.");
+    } catch (err: any) {
+      alert(err?.message || "Failed to update team.");
+    }
+  };
+
+  const handleDeleteTeam = async () => {
+    if (!team) return;
+    if (!confirm(`Delete team "${team.name}"? This cannot be undone.`)) return;
+
+    try {
+      await MockDB.deleteTeam(team.id);
+      alert("Team deleted.");
+      router.push("/dashboard");
+    } catch (err: any) {
+      alert(err?.message || "Failed to delete team.");
+    }
+  };
 
   const handleSendRequest = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -129,6 +178,23 @@ export default function TeamDetailPage({ params }: PageProps) {
               {team.status}
             </span>
           </div>
+
+          {canManageTeam && (
+            <div className="flex flex-wrap gap-2">
+              <button
+                onClick={() => setShowEditModal(true)}
+                className="px-3 py-2 rounded-lg bg-white/5 border border-white/10 text-xs font-semibold text-gray-200 hover:bg-white/10 flex items-center gap-2"
+              >
+                <Edit2 className="h-3.5 w-3.5" /> Edit Team
+              </button>
+              <button
+                onClick={handleDeleteTeam}
+                className="px-3 py-2 rounded-lg bg-red-500/10 border border-red-500/20 text-xs font-semibold text-red-300 hover:bg-red-500/20 flex items-center gap-2"
+              >
+                <Trash2 className="h-3.5 w-3.5" /> Delete Team
+              </button>
+            </div>
+          )}
 
           <div className="space-y-4">
             <div className="p-3 bg-white/5 rounded-xl border border-white/5">
@@ -212,6 +278,89 @@ export default function TeamDetailPage({ params }: PageProps) {
         </div>
 
       </main>
+
+      {showEditModal && team && (
+        <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="w-full max-w-lg glass rounded-2xl border border-white/10 p-6">
+            <div className="flex justify-between items-start mb-5">
+              <div>
+                <h3 className="text-lg font-bold text-white">Edit Team</h3>
+                <p className="text-xs text-gray-400 mt-1">Update the team details that students see in browse mode.</p>
+              </div>
+              <button onClick={() => setShowEditModal(false)} className="text-gray-400 hover:text-white text-sm">✕</button>
+            </div>
+
+            <form onSubmit={handleSaveTeam} className="space-y-4">
+              <div>
+                <label className="block text-xs font-semibold text-gray-400 mb-1">Team Name</label>
+                <input
+                  value={editName}
+                  onChange={(e) => setEditName(e.target.value)}
+                  className="w-full rounded-lg bg-black/40 border border-white/10 px-4 py-2.5 text-sm text-white focus:outline-none focus:border-[#f97316]"
+                  required
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-semibold text-gray-400 mb-1">Problem Statement Title</label>
+                <input
+                  value={editPsTitle}
+                  onChange={(e) => setEditPsTitle(e.target.value)}
+                  className="w-full rounded-lg bg-black/40 border border-white/10 px-4 py-2.5 text-sm text-white focus:outline-none focus:border-[#f97316]"
+                  required
+                />
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-semibold text-gray-400 mb-1">Domain</label>
+                  <input
+                    value={editPsDomain}
+                    onChange={(e) => setEditPsDomain(e.target.value)}
+                    className="w-full rounded-lg bg-black/40 border border-white/10 px-4 py-2.5 text-sm text-white focus:outline-none focus:border-[#f97316]"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-gray-400 mb-1">Capacity</label>
+                  <input
+                    type="number"
+                    min={2}
+                    max={6}
+                    value={editCapacity}
+                    onChange={(e) => setEditCapacity(Number(e.target.value))}
+                    className="w-full rounded-lg bg-black/40 border border-white/10 px-4 py-2.5 text-sm text-white focus:outline-none focus:border-[#f97316]"
+                    required
+                  />
+                </div>
+              </div>
+              <div>
+                <label className="block text-xs font-semibold text-gray-400 mb-1">Visibility</label>
+                <select
+                  value={editVisibility}
+                  onChange={(e) => setEditVisibility(e.target.value as "public" | "private")}
+                  className="w-full rounded-lg bg-black/40 border border-white/10 px-4 py-2.5 text-sm text-white focus:outline-none focus:border-[#f97316]"
+                >
+                  <option value="public">Public</option>
+                  <option value="private">Private</option>
+                </select>
+              </div>
+              <div className="flex justify-end gap-2 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setShowEditModal(false)}
+                  className="px-4 py-2 rounded-lg text-xs font-semibold text-gray-300 border border-white/10"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="px-4 py-2 rounded-lg text-xs font-semibold text-white bg-[#f97316] hover:bg-[#ea580c] flex items-center gap-2"
+                >
+                  <Save className="h-3.5 w-3.5" /> Save Changes
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

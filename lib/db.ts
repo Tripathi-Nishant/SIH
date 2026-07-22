@@ -200,21 +200,19 @@ export class MockDB {
     return created;
   }
 
-  static async updateTeam(team: Team) {
-    const { error } = await supabase
-      .from("teams")
-      .update({
-        name: team.name,
-        problem_statement_title: team.problem_statement_title,
-        problem_statement_domain: team.problem_statement_domain,
-        required_skills_json: team.required_skills_json,
-        capacity: team.capacity,
-        status: team.status,
-        visibility: team.visibility,
-      })
-      .eq("id", team.id);
+  static async updateTeam(teamId: string, updates: Partial<Omit<Team, "id" | "created_at" | "leader_id">>) {
+    const { team } = await apiRequest<{ team: Team }>(`/api/teams/${teamId}`, {
+      method: "PATCH",
+      body: JSON.stringify(updates),
+    });
 
-    if (error) throw new Error(error.message);
+    return team;
+  }
+
+  static async deleteTeam(teamId: string) {
+    return apiRequest<{ message: string }>(`/api/teams/${teamId}`, {
+      method: "DELETE",
+    });
   }
 
   static async removeTeamMember(teamId: string, _userId: string) {
@@ -337,5 +335,55 @@ export class MockDB {
     return () => {
       supabase.removeChannel(channel);
     };
+  }
+
+  static async submitArchivePpt(formData: FormData): Promise<{ id: string; file_url: string; storage_path: string }> {
+    const res = await fetch("/api/archive/ppts", {
+      method: "POST",
+      body: formData,
+      credentials: "include",
+    });
+
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      throw new Error(data.error || `Request failed (${res.status})`);
+    }
+    return data;
+  }
+
+  static async submitArchiveTip(payload: {
+    category: string;
+    content: string;
+    author: string;
+    role?: string;
+  }): Promise<{ tip: any }> {
+    return apiRequest("/api/archive/tips", {
+      method: "POST",
+      body: JSON.stringify(payload),
+    });
+  }
+
+  static async upvoteArchivePpt(pptId: string) {
+    return apiRequest<{ upvotes: number }>(`/api/archive/ppts/${pptId}/upvote`, {
+      method: "POST",
+    });
+  }
+
+  static async upvoteArchiveTip(tipId: string) {
+    return apiRequest<{ upvotes: number }>(`/api/archive/tips/${tipId}/upvote`, {
+      method: "POST",
+    });
+  }
+
+  static async deleteArchivePpt(pptId: string) {
+    return apiRequest<{ message: string }>(`/api/archive/ppts/${pptId}`, {
+      method: "DELETE",
+    });
+  }
+
+  static async deleteArchiveTip(tipId: string) {
+    return apiRequest<{ message: string }>(`/api/archive/tips/${tipId}`, {
+      method: "DELETE",
+    });
   }
 }

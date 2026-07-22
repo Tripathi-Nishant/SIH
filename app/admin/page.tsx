@@ -76,10 +76,10 @@ export default function AdminPage() {
     const allTeams = await MockDB.getTeams();
     const target = allTeams.find(t => t.id === teamId);
     if (target) {
-      target.status = currentStatus === 'locked' ? 'open' : 'locked';
-      await MockDB.updateTeam(target);
+      const nextStatus = currentStatus === 'locked' ? 'open' : 'locked';
+      await MockDB.updateTeam(teamId, { status: nextStatus });
       await loadAdminData();
-      alert(`Team "${target.name}" status overridden to ${target.status}`);
+      alert(`Team "${target.name}" status overridden to ${nextStatus}`);
     }
   };
 

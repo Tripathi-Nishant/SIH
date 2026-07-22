@@ -1,24 +1,30 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import Navbar from "@/components/Navbar";
 import { supabase } from "@/lib/supabaseClient";
-import { FileText, ExternalLink, ThumbsUp, PlusCircle } from "lucide-react";
+import { MockDB, Profile } from "@/lib/db";
+import { isAdminUser } from "@/lib/admin";
+import { FileText, ExternalLink, ThumbsUp, PlusCircle, Trash2 } from "lucide-react";
 
 interface PptEntry {
   id: string;
+  author_id?: string | null;
   year: number;
   team_name: string;
   ps_title: string;
   ps_domain: string;
   track: 'Software' | 'Hardware';
   file_url: string;
+  storage_path?: string | null;
   retrospective: string;
   upvotes: number;
 }
 
 interface TipEntry {
   id: string;
+  author_id?: string | null;
   category: string;
   content: string;
   author: string;
@@ -27,9 +33,13 @@ interface TipEntry {
 }
 
 export default function HallOfFamePage() {
+  const router = useRouter();
   const [ppts, setPpts] = useState<PptEntry[]>([]);
   const [tips, setTips] = useState<TipEntry[]>([]);
+  const [currentUser, setCurrentUser] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
+  const [pptVoteMap, setPptVoteMap] = useState<Record<string, number>>({});
+  const [tipVoteMap, setTipVoteMap] = useState<Record<string, number>>({});
 
   const [selectedYear, setSelectedYear] = useState<string>("");
   const [selectedTrack, setSelectedTrack] = useState<string>("");
@@ -47,96 +57,87 @@ export default function HallOfFamePage() {
   const [newContent, setNewContent] = useState("");
   const [newAuthor, setNewAuthor] = useState("");
 
+  const loadArchiveData = async () => {
+    setLoading(true);
+    const [userData, pptsRes, tipsRes, pptVotesRes, tipVotesRes] = await Promise.all([
+      MockDB.getCurrentUser(),
+      supabase.from("archive_ppts").select("*").order("created_at", { ascending: false }),
+      supabase.from("archive_tips").select("*").order("created_at", { ascending: false }),
+      supabase.from("user_upvotes_ppts").select("ppt_id"),
+      supabase.from("user_upvotes_tips").select("tip_id"),
+    ]);
+
+    setCurrentUser(userData);
+    setPpts((pptsRes.data || []) as any);
+    setTips((tipsRes.data || []) as any);
+    setPptVoteMap(
+      (pptVotesRes.data || []).reduce((acc: Record<string, number>, row: any) => {
+        acc[row.ppt_id] = (acc[row.ppt_id] || 0) + 1;
+        return acc;
+      }, {})
+    );
+    setTipVoteMap(
+      (tipVotesRes.data || []).reduce((acc: Record<string, number>, row: any) => {
+        acc[row.tip_id] = (acc[row.tip_id] || 0) + 1;
+        return acc;
+      }, {})
+    );
+    setLoading(false);
+  };
+
   useEffect(() => {
-    async function loadArchiveData() {
-      setLoading(true);
-      const { data: pptsData } = await supabase.from('archive_ppts').select('*').order('upvotes', { ascending: false });
-      if (pptsData && pptsData.length > 0) {
-        setPpts(pptsData as any);
-      }
-      const { data: tipsData } = await supabase.from('archive_tips').select('*').order('upvotes', { ascending: false });
-      if (tipsData && tipsData.length > 0) {
-        setTips(tipsData as any);
-      }
-      setLoading(false);
-    }
     loadArchiveData();
   }, []);
 
   const handleUpvotePpt = async (id: string) => {
-    const current = ppts.find(p => p.id === id);
-    if (!current) return;
-    
-    setPpts(prev => prev.map(p => p.id === id ? { ...p, upvotes: p.upvotes + 1 } : p));
-    await supabase.from('archive_ppts').update({ upvotes: current.upvotes + 1 }).eq('id', id);
+    await MockDB.upvoteArchivePpt(id);
+    await loadArchiveData();
   };
 
   const handleUpvoteTip = async (id: string) => {
-    const current = tips.find(t => t.id === id);
-    if (!current) return;
-
-    setTips(prev => prev.map(t => t.id === id ? { ...t, upvotes: t.upvotes + 1 } : t));
-    await supabase.from('archive_tips').update({ upvotes: current.upvotes + 1 }).eq('id', id);
+    await MockDB.upvoteArchiveTip(id);
+    await loadArchiveData();
   };
 
   const handleAddPpt = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newTeamName || !newPsTitle) return;
 
-    const entry = {
-      year: 2026,
-      team_name: newTeamName,
-      ps_title: newPsTitle,
-      ps_domain: newDomain || "General",
-      track: newTrack,
-      file_url: "#",
-      retrospective: newRetrospective,
-      upvotes: 1
-    };
-
-    const { data, error } = await supabase.from('archive_ppts').insert(entry).select().single();
-    if (data) {
-      setPpts(prev => [data as any, ...prev]);
-    } else {
-      console.error(error);
-      // Fallback
-      setPpts(prev => [{ id: `p_${Date.now()}`, ...entry } as any, ...prev]);
-    }
-    
-    setShowPptModal(false);
-    setNewTeamName("");
-    setNewPsTitle("");
-    setNewDomain("");
-    setNewRetrospective("");
+    router.push("/archive/submit");
   };
 
   const handleAddTip = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newContent || !newAuthor) return;
 
-    const entry = {
+    const { tip } = await MockDB.submitArchiveTip({
       category: newCategory,
       content: newContent,
       author: newAuthor,
       role: "KIET Contributor",
-      upvotes: 1
-    };
-
-    const { data, error } = await supabase.from('archive_tips').insert(entry).select().single();
-    if (data) {
-      setTips(prev => [data as any, ...prev]);
-    } else {
-      console.error(error);
-      // Fallback
-      setTips(prev => [{ id: `ti_${Date.now()}`, ...entry } as any, ...prev]);
-    }
-
+    });
+    setTips(prev => [tip as any, ...prev]);
     setShowTipModal(false);
     setNewContent("");
     setNewAuthor("");
   };
 
-  const filteredPpts = ppts.filter(p => {
+  const handleDeletePpt = async (id: string) => {
+    if (!confirm("Delete this pitch deck?")) return;
+    await MockDB.deleteArchivePpt(id);
+    await loadArchiveData();
+  };
+
+  const handleDeleteTip = async (id: string) => {
+    if (!confirm("Delete this tip?")) return;
+    await MockDB.deleteArchiveTip(id);
+    await loadArchiveData();
+  };
+
+  const sortedPpts = [...ppts].sort((a, b) => (pptVoteMap[b.id] ?? b.upvotes) - (pptVoteMap[a.id] ?? a.upvotes));
+  const sortedTips = [...tips].sort((a, b) => (tipVoteMap[b.id] ?? b.upvotes) - (tipVoteMap[a.id] ?? a.upvotes));
+
+  const filteredPpts = sortedPpts.filter(p => {
     const matchesYear = !selectedYear || p.year.toString() === selectedYear;
     const matchesTrack = !selectedTrack || p.track === selectedTrack;
     return matchesYear && matchesTrack;
@@ -155,10 +156,10 @@ export default function HallOfFamePage() {
           </div>
           <div className="flex gap-2">
             <button
-              onClick={() => setShowPptModal(true)}
+              onClick={() => router.push("/archive/submit")}
               className="px-3.5 py-2 bg-gradient-to-r from-[#f97316] to-[#ea580c] hover:opacity-90 text-white text-xs font-semibold rounded-lg flex items-center gap-1.5 transition-all shadow-md"
             >
-              <PlusCircle className="h-4 w-4" /> Share Finalist Deck
+              <PlusCircle className="h-4 w-4" /> Upload Pitch Deck
             </button>
             <button
               onClick={() => setShowTipModal(true)}
@@ -236,12 +237,22 @@ export default function HallOfFamePage() {
                         View Presentation Deck <ExternalLink className="h-3 w-3" />
                       </a>
 
-                      <button
-                        onClick={() => handleUpvotePpt(ppt.id)}
-                        className="flex items-center gap-1 px-3 py-1 bg-white/5 hover:bg-white/10 rounded-md border border-white/10 text-xs font-semibold text-gray-300 transition-colors"
-                      >
-                        <ThumbsUp className="h-3.5 w-3.5 text-[#f97316]" /> {ppt.upvotes} Upvotes
-                      </button>
+                      <div className="flex items-center gap-2">
+                        {(currentUser && (ppt.author_id === currentUser.id || isAdminUser(currentUser))) && (
+                          <button
+                            onClick={() => handleDeletePpt(ppt.id)}
+                            className="flex items-center gap-1 px-3 py-1 bg-red-500/10 hover:bg-red-500/20 rounded-md border border-red-500/20 text-xs font-semibold text-red-300 transition-colors"
+                          >
+                            <Trash2 className="h-3.5 w-3.5" /> Delete
+                          </button>
+                        )}
+                        <button
+                          onClick={() => handleUpvotePpt(ppt.id)}
+                          className="flex items-center gap-1 px-3 py-1 bg-white/5 hover:bg-white/10 rounded-md border border-white/10 text-xs font-semibold text-gray-300 transition-colors"
+                        >
+                          <ThumbsUp className="h-3.5 w-3.5 text-[#f97316]" /> {(pptVoteMap[ppt.id] ?? ppt.upvotes)} Upvotes
+                        </button>
+                      </div>
                     </div>
                   </div>
                 ))}
@@ -264,7 +275,7 @@ export default function HallOfFamePage() {
                   No tips have been shared yet.
                 </div>
               ) : (
-                tips.map((tip) => (
+                sortedTips.map((tip) => (
                 <div key={tip.id} className="p-5 rounded-2xl bg-white/5 border border-white/10 flex flex-col justify-between gap-3 text-xs">
                   <div>
                     <span className="px-2 py-0.5 rounded bg-yellow-500/10 text-yellow-300 border border-yellow-500/20 text-[9px] font-bold uppercase tracking-wider block w-fit">
@@ -275,18 +286,28 @@ export default function HallOfFamePage() {
                     </p>
                   </div>
 
-                  <div className="flex justify-between items-center pt-3 border-t border-white/5 text-[10px]">
-                    <div>
-                      <span className="font-bold text-white block">{tip.author}</span>
-                      <span className="text-gray-400 block">{tip.role}</span>
+                    <div className="flex justify-between items-center pt-3 border-t border-white/5 text-[10px]">
+                      <div>
+                        <span className="font-bold text-white block">{tip.author}</span>
+                        <span className="text-gray-400 block">{tip.role}</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        {(currentUser && (tip.author_id === currentUser.id || isAdminUser(currentUser))) && (
+                          <button
+                            onClick={() => handleDeleteTip(tip.id)}
+                            className="flex items-center gap-1 px-2.5 py-0.5 bg-red-500/10 hover:bg-red-500/20 rounded text-[10px] text-red-300"
+                          >
+                            <Trash2 className="h-3 w-3" /> Delete
+                          </button>
+                        )}
+                        <button
+                          onClick={() => handleUpvoteTip(tip.id)}
+                          className="flex items-center gap-1 px-2.5 py-0.5 bg-black/20 hover:bg-black/35 rounded text-[10px] text-gray-400"
+                        >
+                          <ThumbsUp className="h-3 w-3 text-[#f97316]" /> {(tipVoteMap[tip.id] ?? tip.upvotes)}
+                        </button>
+                      </div>
                     </div>
-                    <button
-                      onClick={() => handleUpvoteTip(tip.id)}
-                      className="flex items-center gap-1 px-2.5 py-0.5 bg-black/20 hover:bg-black/35 rounded text-[10px] text-gray-400"
-                    >
-                      <ThumbsUp className="h-3 w-3 text-[#f97316]" /> {tip.upvotes}
-                    </button>
-                  </div>
                 </div>
               ))
               )}
