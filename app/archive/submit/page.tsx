@@ -102,8 +102,10 @@ export default function ArchiveSubmitPage() {
             <form onSubmit={handleSubmit} className="space-y-5">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs font-semibold text-gray-400 mb-1">Team Name</label>
+                  <label htmlFor="archive-team-name" className="block text-xs font-semibold text-gray-400 mb-1">Team Name</label>
                   <input
+                    id="archive-team-name"
+                    name="team_name"
                     value={teamName}
                     onChange={(e) => setTeamName(e.target.value)}
                     className="w-full rounded-xl bg-black/40 border border-white/10 px-4 py-3 text-sm text-white focus:outline-none focus:border-[#f97316]"
@@ -112,8 +114,10 @@ export default function ArchiveSubmitPage() {
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-semibold text-gray-400 mb-1">Problem Statement Title</label>
+                  <label htmlFor="archive-ps-title" className="block text-xs font-semibold text-gray-400 mb-1">Problem Statement Title</label>
                   <input
+                    id="archive-ps-title"
+                    name="ps_title"
                     value={psTitle}
                     onChange={(e) => setPsTitle(e.target.value)}
                     className="w-full rounded-xl bg-black/40 border border-white/10 px-4 py-3 text-sm text-white focus:outline-none focus:border-[#f97316]"
@@ -122,8 +126,10 @@ export default function ArchiveSubmitPage() {
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-semibold text-gray-400 mb-1">Domain</label>
+                  <label htmlFor="archive-domain" className="block text-xs font-semibold text-gray-400 mb-1">Domain</label>
                   <input
+                    id="archive-domain"
+                    name="ps_domain"
                     value={psDomain}
                     onChange={(e) => setPsDomain(e.target.value)}
                     className="w-full rounded-xl bg-black/40 border border-white/10 px-4 py-3 text-sm text-white focus:outline-none focus:border-[#f97316]"
@@ -131,8 +137,10 @@ export default function ArchiveSubmitPage() {
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-semibold text-gray-400 mb-1">Track</label>
+                  <label htmlFor="archive-track" className="block text-xs font-semibold text-gray-400 mb-1">Track</label>
                   <select
+                    id="archive-track"
+                    name="track"
                     value={track}
                     onChange={(e) => setTrack(e.target.value as "Software" | "Hardware")}
                     className="w-full rounded-xl bg-black/40 border border-white/10 px-4 py-3 text-sm text-white focus:outline-none focus:border-[#f97316]"
@@ -142,8 +150,10 @@ export default function ArchiveSubmitPage() {
                   </select>
                 </div>
                 <div>
-                  <label className="block text-xs font-semibold text-gray-400 mb-1">Submission Year</label>
+                  <label htmlFor="archive-year" className="block text-xs font-semibold text-gray-400 mb-1">Submission Year</label>
                   <input
+                    id="archive-year"
+                    name="year"
                     type="number"
                     min={2024}
                     max={2030}
@@ -154,8 +164,10 @@ export default function ArchiveSubmitPage() {
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-semibold text-gray-400 mb-1">Pitch Deck PDF</label>
+                  <label htmlFor="archive-file" className="block text-xs font-semibold text-gray-400 mb-1">Pitch Deck PDF</label>
                   <input
+                    id="archive-file"
+                    name="file"
                     type="file"
                     accept="application/pdf"
                     onChange={(e) => setFile(e.target.files?.[0] || null)}
@@ -166,8 +178,10 @@ export default function ArchiveSubmitPage() {
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-gray-400 mb-1">Retrospective</label>
+                <label htmlFor="archive-retrospective" className="block text-xs font-semibold text-gray-400 mb-1">Retrospective</label>
                 <textarea
+                  id="archive-retrospective"
+                  name="retrospective"
                   rows={5}
                   value={retrospective}
                   onChange={(e) => setRetrospective(e.target.value)}

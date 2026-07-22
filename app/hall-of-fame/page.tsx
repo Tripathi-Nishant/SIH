@@ -3,7 +3,6 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Navbar from "@/components/Navbar";
-import { supabase } from "@/lib/supabaseClient";
 import { MockDB, Profile } from "@/lib/db";
 import { isAdminUser } from "@/lib/admin";
 import { FileText, ExternalLink, ThumbsUp, PlusCircle, Trash2 } from "lucide-react";
@@ -59,25 +58,24 @@ export default function HallOfFamePage() {
 
   const loadArchiveData = async () => {
     setLoading(true);
-    const [userData, pptsRes, tipsRes, pptVotesRes, tipVotesRes] = await Promise.all([
+    const [userData, feedRes] = await Promise.all([
       MockDB.getCurrentUser(),
-      supabase.from("archive_ppts").select("*").order("created_at", { ascending: false }),
-      supabase.from("archive_tips").select("*").order("created_at", { ascending: false }),
-      supabase.from("user_upvotes_ppts").select("ppt_id"),
-      supabase.from("user_upvotes_tips").select("tip_id"),
+      fetch("/api/archive/feed", { credentials: "include" }),
     ]);
 
+    const feed = await feedRes.json().catch(() => ({}));
+
     setCurrentUser(userData);
-    setPpts((pptsRes.data || []) as any);
-    setTips((tipsRes.data || []) as any);
+    setPpts((feed.ppts || []) as any);
+    setTips((feed.tips || []) as any);
     setPptVoteMap(
-      (pptVotesRes.data || []).reduce((acc: Record<string, number>, row: any) => {
+      (feed.pptVotes || []).reduce((acc: Record<string, number>, row: any) => {
         acc[row.ppt_id] = (acc[row.ppt_id] || 0) + 1;
         return acc;
       }, {})
     );
     setTipVoteMap(
-      (tipVotesRes.data || []).reduce((acc: Record<string, number>, row: any) => {
+      (feed.tipVotes || []).reduce((acc: Record<string, number>, row: any) => {
         acc[row.tip_id] = (acc[row.tip_id] || 0) + 1;
         return acc;
       }, {})
@@ -327,8 +325,10 @@ export default function HallOfFamePage() {
             <form onSubmit={handleAddPpt} className="space-y-4">
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1">
-                  <label className="text-xs font-semibold text-gray-300">Team Name</label>
+                  <label htmlFor="ppt-team-name" className="text-xs font-semibold text-gray-300">Team Name</label>
                   <input
+                    id="ppt-team-name"
+                    name="team_name"
                     type="text"
                     required
                     placeholder="e.g. ByteMasters"
@@ -338,8 +338,10 @@ export default function HallOfFamePage() {
                   />
                 </div>
                 <div className="space-y-1">
-                  <label className="text-xs font-semibold text-gray-300">Track Type</label>
+                  <label htmlFor="ppt-track" className="text-xs font-semibold text-gray-300">Track Type</label>
                   <select
+                    id="ppt-track"
+                    name="track"
                     value={newTrack}
                     onChange={(e) => setNewTrack(e.target.value as 'Software' | 'Hardware')}
                     className="w-full bg-[#0a0f1d] border border-white/10 rounded-lg px-3 py-2 text-xs text-white"
@@ -351,8 +353,10 @@ export default function HallOfFamePage() {
               </div>
 
               <div className="space-y-1">
-                <label className="text-xs font-semibold text-gray-300">Problem Statement Title</label>
+                <label htmlFor="ppt-ps-title" className="text-xs font-semibold text-gray-300">Problem Statement Title</label>
                 <input
+                  id="ppt-ps-title"
+                  name="ps_title"
                   type="text"
                   required
                   placeholder="e.g. Crop disease recommendation"
@@ -363,8 +367,10 @@ export default function HallOfFamePage() {
               </div>
 
               <div className="space-y-1">
-                <label className="text-xs font-semibold text-gray-300">Problem Category / Domain</label>
+                <label htmlFor="ppt-domain" className="text-xs font-semibold text-gray-300">Problem Category / Domain</label>
                 <input
+                  id="ppt-domain"
+                  name="ps_domain"
                   type="text"
                   placeholder="e.g. Agriculture"
                   value={newDomain}
@@ -374,8 +380,10 @@ export default function HallOfFamePage() {
               </div>
 
               <div className="space-y-1">
-                <label className="text-xs font-semibold text-gray-300">Key Retrospective / Advice</label>
+                <label htmlFor="ppt-retrospective" className="text-xs font-semibold text-gray-300">Key Retrospective / Advice</label>
                 <textarea
+                  id="ppt-retrospective"
+                  name="retrospective"
                   rows={3}
                   required
                   placeholder="What was the biggest learning? What worked best for the jury?"
@@ -413,8 +421,10 @@ export default function HallOfFamePage() {
 
             <form onSubmit={handleAddTip} className="space-y-4">
               <div className="space-y-1">
-                <label className="text-xs font-semibold text-gray-300">Category Tag</label>
+                <label htmlFor="tip-category" className="text-xs font-semibold text-gray-300">Category Tag</label>
                 <select
+                  id="tip-category"
+                  name="category"
                   value={newCategory}
                   onChange={(e) => setNewCategory(e.target.value)}
                   className="w-full bg-[#0a0f1d] border border-white/10 rounded-lg px-3 py-2 text-xs text-white"
@@ -426,8 +436,10 @@ export default function HallOfFamePage() {
               </div>
 
               <div className="space-y-1">
-                <label className="text-xs font-semibold text-gray-300">Your Name (Author)</label>
+                <label htmlFor="tip-author" className="text-xs font-semibold text-gray-300">Your Name (Author)</label>
                 <input
+                  id="tip-author"
+                  name="author"
                   type="text"
                   required
                   placeholder="e.g. Aditya Gupta"
@@ -438,8 +450,10 @@ export default function HallOfFamePage() {
               </div>
 
               <div className="space-y-1">
-                <label className="text-xs font-semibold text-gray-300">Advice Content</label>
+                <label htmlFor="tip-content" className="text-xs font-semibold text-gray-300">Advice Content</label>
                 <textarea
+                  id="tip-content"
+                  name="content"
                   rows={4}
                   required
                   placeholder="Write clear, actionable advice for current aspirants..."
