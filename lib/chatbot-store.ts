@@ -21,6 +21,10 @@ interface ChatbotState {
 }
 
 const makeId = () => `${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
+const chatbotStorage =
+  typeof window === "undefined"
+    ? undefined
+    : createJSONStorage(() => window.localStorage);
 
 export const useChatbotStore = create<ChatbotState>()(
   persist(
@@ -44,7 +48,7 @@ export const useChatbotStore = create<ChatbotState>()(
     }),
     {
       name: "sih-chatbot",
-      storage: createJSONStorage(() => localStorage),
+      storage: chatbotStorage as any,
       partialize: (state) => ({
         open: state.open,
         messages: state.messages,
