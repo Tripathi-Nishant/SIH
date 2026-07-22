@@ -44,6 +44,7 @@ export default function Navbar() {
   ];
 
   const isAdmin = isAdminUser(user);
+  const reportIssueUrl = "https://mail.google.com/mail/?view=cm&fs=1&to=tripathinishant498@gmail.com&su=SIH%20Team%20Finder%20Issue";
 
   const userInitial = user?.name
     ? user.name.charAt(0).toUpperCase()
@@ -121,7 +122,9 @@ export default function Navbar() {
               </Link>
             )}
             <a
-              href="mailto:tripathinishant498@gmail.com?subject=SIH%20Team%20Finder%20Issue"
+              href={reportIssueUrl}
+              target="_blank"
+              rel="noreferrer"
               className="flex items-center gap-1.5 px-2.5 lg:px-3 py-2 rounded-lg text-[11px] lg:text-xs font-semibold text-gray-400 hover:text-white transition-colors shrink-0 whitespace-nowrap"
             >
               <AlertTriangle className="h-3.5 w-3.5" /> Report Issue
@@ -234,7 +237,9 @@ export default function Navbar() {
             </Link>
           )}
           <a
-            href="mailto:tripathinishant498@gmail.com?subject=SIH%20Team%20Finder%20Issue"
+            href={reportIssueUrl}
+            target="_blank"
+            rel="noreferrer"
             className="flex items-center gap-3 px-3 py-3 rounded-xl text-sm font-medium text-gray-400 hover:text-white transition-colors"
           >
             <AlertTriangle className="h-4 w-4" /> Report Issue
