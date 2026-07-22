@@ -1,15 +1,12 @@
 // Server-only Supabase client (uses next/headers — never import in client components)
 import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
+import { getRequiredEnv } from "./env";
 
 export async function createServerSupabaseClient() {
   const cookieStore = await cookies();
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-
-  if (!supabaseUrl || !supabaseAnonKey) {
-    throw new Error("Supabase environment variables are not configured");
-  }
+  const supabaseUrl = getRequiredEnv("NEXT_PUBLIC_SUPABASE_URL");
+  const supabaseAnonKey = getRequiredEnv("NEXT_PUBLIC_SUPABASE_ANON_KEY");
 
   return createServerClient(supabaseUrl, supabaseAnonKey, {
     cookies: {

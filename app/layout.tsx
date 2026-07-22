@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import { ToastProvider } from "@/components/Toast";
+import ChatBot from "@/components/ChatBot";
 
 export const metadata: Metadata = {
   title: "SIH Team Finder | KIET Group of Institutions",
@@ -15,7 +16,10 @@ export default function RootLayout({
   return (
     <html lang="en" className="h-full antialiased dark">
       <body className="min-h-full flex flex-col bg-[#060a17] text-gray-100">
-        <ToastProvider>{children}</ToastProvider>
+        <ToastProvider>
+          {children}
+          <ChatBot />
+        </ToastProvider>
       </body>
     </html>
   );

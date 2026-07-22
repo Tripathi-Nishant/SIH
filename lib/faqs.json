@@ -1,0 +1,92 @@
+{
+  "general": [
+    {
+      "question": "What is the team size requirement?",
+      "answer": "Teams must have 6 members for the SIH workflow in this portal.",
+      "keywords": ["team size", "members", "6 members", "how many people", "team structure"],
+      "pages": ["all"]
+    },
+    {
+      "question": "How do I sign in?",
+      "answer": "Use your KIET Google account or KIET email OTP to access the portal.",
+      "keywords": ["login", "sign in", "otp", "google", "email"],
+      "pages": ["all"]
+    },
+    {
+      "question": "Who can access the platform?",
+      "answer": "Only verified KIET students, faculty, and admins can access the platform.",
+      "keywords": ["access", "allowed", "who can use", "eligibility"],
+      "pages": ["all"]
+    }
+  ],
+  "onboarding": [
+    {
+      "question": "Why can't I continue onboarding?",
+      "answer": "Make sure your basic profile fields are filled and your roll number is in the valid digit range.",
+      "keywords": ["onboarding", "profile", "continue", "roll number", "complete profile"],
+      "pages": ["onboard"]
+    },
+    {
+      "question": "How do I sync GitHub?",
+      "answer": "Open onboarding, click GitHub sync, and complete the OAuth flow. Your verified skills will be imported automatically.",
+      "keywords": ["github", "sync", "repositories", "oauth", "verified skills"],
+      "pages": ["onboard", "profile"]
+    }
+  ],
+  "team_management": [
+    {
+      "question": "How do I create a team?",
+      "answer": "Go to your dashboard and use the Create Team option. After that, you can edit the team, invite people, and manage tasks.",
+      "keywords": ["create team", "new team", "team creation", "dashboard"],
+      "pages": ["dashboard", "teams"]
+    },
+    {
+      "question": "How do I join a team?",
+      "answer": "Open Team Finder, choose a team, and send a join request from the team detail page.",
+      "keywords": ["join team", "request join", "team finder", "apply"],
+      "pages": ["teams", "browse"]
+    },
+    {
+      "question": "How do I delete a team?",
+      "answer": "Only the team leader or admin can delete a team from the team detail page.",
+      "keywords": ["delete team", "remove team", "disband"],
+      "pages": ["teams"]
+    }
+  ],
+  "mentors": [
+    {
+      "question": "How do I request a mentor?",
+      "answer": "Open the Mentors page, choose a faculty mentor, and send a request from your team flow.",
+      "keywords": ["request mentor", "mentor request", "faculty mentor", "guide"],
+      "pages": ["mentors", "teams"]
+    },
+    {
+      "question": "How does the mentor hub work?",
+      "answer": "Faculty and admins can manage their profile, review pending requests, and see active team assignments in the Mentor Hub.",
+      "keywords": ["mentor hub", "faculty", "mentor profile", "assignments"],
+      "pages": ["mentors", "mentors/dashboard"]
+    }
+  ],
+  "archive": [
+    {
+      "question": "How do I submit a pitch deck?",
+      "answer": "Go to the Archive submit page, upload a PDF pitch deck, and the portal will store it in the archive bucket.",
+      "keywords": ["pitch deck", "upload pdf", "archive", "submission"],
+      "pages": ["archive", "archive/submit"]
+    },
+    {
+      "question": "How do upvotes work?",
+      "answer": "Each user can upvote a submission once, and the portal tracks unique votes for fairness.",
+      "keywords": ["upvote", "votes", "unique vote", "score"],
+      "pages": ["archive"]
+    }
+  ],
+  "support": [
+    {
+      "question": "What should I do if something is broken?",
+      "answer": "Use the report issue link or contact support. Include the page, what you clicked, and any error message you saw.",
+      "keywords": ["broken", "error", "support", "report issue", "bug"],
+      "pages": ["all"]
+    }
+  ]
+}

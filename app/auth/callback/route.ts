@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { createServerClient } from "@supabase/ssr";
+import { getRequiredEnv } from "@/lib/env";
 
 const ALLOWED_DOMAINS = ["kiet.edu", "student.kiet.in", "kiet.in"];
 
@@ -21,8 +22,8 @@ export async function GET(request: NextRequest) {
   const supabaseResponse = NextResponse.redirect(`${origin}${next}`);
 
   const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    getRequiredEnv("NEXT_PUBLIC_SUPABASE_URL"),
+    getRequiredEnv("NEXT_PUBLIC_SUPABASE_ANON_KEY"),
     {
       cookies: {
         getAll() {

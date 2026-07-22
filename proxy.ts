@@ -1,15 +1,17 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { createServerClient } from "@supabase/ssr";
+import { getRequiredEnv } from "./lib/env";
 
-const PROTECTED_ROUTES = ["/dashboard", "/browse", "/teams", "/onboard", "/admin", "/hall-of-fame", "/settings"];
+const PROTECTED_ROUTES = ["/dashboard", "/browse", "/teams", "/onboard", "/admin", "/hall-of-fame", "/settings", "/mentors"];
+const ADMIN_ONLY_ROUTES = ["/admin", "/mentors/dashboard"];
 const PROFILE_COMPLETE_THRESHOLD = 80;
 
 export default async function proxy(request: NextRequest) {
   let supabaseResponse = NextResponse.next({ request });
 
   const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    getRequiredEnv("NEXT_PUBLIC_SUPABASE_URL"),
+    getRequiredEnv("NEXT_PUBLIC_SUPABASE_ANON_KEY"),
     {
       cookies: {
         getAll() {
@@ -54,7 +56,11 @@ export default async function proxy(request: NextRequest) {
 
     profileCompleteness = profile?.profile_completeness ?? 0;
 
-    if (path === "/admin" && profile?.role !== "admin" && profile?.role !== "faculty") {
+    if (
+      ADMIN_ONLY_ROUTES.some((route) => path === route || path.startsWith(route + "/")) &&
+      profile?.role !== "admin" &&
+      profile?.role !== "faculty"
+    ) {
       const url = request.nextUrl.clone();
       url.pathname = "/dashboard";
       return NextResponse.redirect(url);

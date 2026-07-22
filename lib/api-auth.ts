@@ -2,14 +2,11 @@ import { createServerClient } from "@supabase/ssr";
 import { createClient } from "@supabase/supabase-js";
 import type { NextRequest } from "next/server";
 import type { Profile } from "./db";
+import { getRequiredEnv } from "./env";
 
 export async function getAuthenticatedUser(request: NextRequest) {
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-
-  if (!supabaseUrl || !supabaseAnonKey) {
-    throw new Error("Supabase environment variables are not configured");
-  }
+  const supabaseUrl = getRequiredEnv("NEXT_PUBLIC_SUPABASE_URL");
+  const supabaseAnonKey = getRequiredEnv("NEXT_PUBLIC_SUPABASE_ANON_KEY");
 
   const supabase = createServerClient(supabaseUrl, supabaseAnonKey, {
     cookies: {
@@ -41,11 +38,8 @@ export async function getAuthenticatedUser(request: NextRequest) {
 }
 
 export function getServiceClient() {
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
-  if (!url || !key) {
-    throw new Error("Supabase service role is not configured");
-  }
+  const url = getRequiredEnv("NEXT_PUBLIC_SUPABASE_URL");
+  const key = getRequiredEnv("SUPABASE_SERVICE_ROLE_KEY");
   return createClient(url, key);
 }
 
