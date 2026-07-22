@@ -58,26 +58,27 @@ export default function Navbar() {
         <div className="h-full w-1/3 bg-[#10b981]" title="Green"></div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex h-16 items-center justify-between">
+      <div className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-8">
+        <div className="flex items-center justify-between gap-3 py-2 lg:py-2.5">
 
           {/* Logo brand */}
-          <div className="flex items-center gap-3">
-            <div className="flex items-center justify-center h-9 w-9 rounded-lg bg-gradient-to-tr from-[#f97316] to-[#002d62] text-white font-bold text-lg shadow-md border border-white/10">
+          <div className="flex items-center gap-2 sm:gap-3 shrink-0">
+            <div className="flex items-center justify-center h-9 w-9 rounded-lg bg-gradient-to-tr from-[#f97316] to-[#002d62] text-white font-bold text-lg shadow-md border border-white/10 shrink-0">
               SIH
             </div>
-            <div>
-              <span className="font-bold tracking-tight text-white block text-sm sm:text-base">
+            <div className="min-w-0">
+              <span className="font-bold tracking-tight text-white block text-xs sm:text-sm xl:text-base leading-tight">
                 KIET SIH <span className="text-[#f97316]">Team Finder</span>
               </span>
-              <span className="text-[10px] text-gray-400 block -mt-1">
+              <span className="text-[10px] text-gray-400 block -mt-0.5 hidden sm:block">
                 Official Hackathon Portal
               </span>
             </div>
           </div>
 
           {/* Desktop Navigation Links */}
-          <nav className="hidden md:flex items-center gap-6">
+          <nav className="hidden md:flex flex-1 items-center justify-center overflow-x-auto no-scrollbar px-2">
+            <div className="flex items-center gap-2 lg:gap-3 xl:gap-4 whitespace-nowrap no-scrollbar">
             {navItems.map((item) => {
               const Icon = item.icon;
               const isActive = pathname === item.href;
@@ -85,7 +86,7 @@ export default function Navbar() {
                 <Link
                   key={item.href}
                   href={item.href}
-                  className={`flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-colors ${isActive
+                  className={`flex items-center gap-2 px-2.5 lg:px-3 py-2 rounded-lg text-xs lg:text-sm font-medium transition-colors shrink-0 whitespace-nowrap ${isActive
                       ? "text-[#f97316] bg-[#f97316]/10"
                       : "text-gray-300 hover:text-white hover:bg-white/5"
                     }`}
@@ -98,7 +99,7 @@ export default function Navbar() {
             {isAdmin && (
               <Link
                 href="/admin"
-                className={`flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-colors ${pathname === "/admin"
+                className={`flex items-center gap-2 px-2.5 lg:px-3 py-2 rounded-lg text-xs lg:text-sm font-medium transition-colors shrink-0 whitespace-nowrap ${pathname === "/admin"
                     ? "text-[#eab308] bg-[#eab308]/10"
                     : "text-gray-300 hover:text-[#eab308] hover:bg-[#eab308]/5"
                   }`}
@@ -110,7 +111,7 @@ export default function Navbar() {
             {(isAdmin || user?.role === "faculty") && (
               <Link
                 href="/mentors/dashboard"
-                className={`flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-colors ${pathname === "/mentors/dashboard"
+                className={`flex items-center gap-2 px-2.5 lg:px-3 py-2 rounded-lg text-xs lg:text-sm font-medium transition-colors shrink-0 whitespace-nowrap ${pathname === "/mentors/dashboard"
                     ? "text-[#10b981] bg-[#10b981]/10"
                     : "text-gray-300 hover:text-[#10b981] hover:bg-[#10b981]/5"
                   }`}
@@ -121,21 +122,22 @@ export default function Navbar() {
             )}
             <a
               href="mailto:tripathinishant498@gmail.com"
-              className="flex items-center gap-1.5 px-3 py-2 rounded-md text-xs font-semibold text-gray-400 hover:text-white transition-colors"
+              className="flex items-center gap-1.5 px-2.5 lg:px-3 py-2 rounded-lg text-[11px] lg:text-xs font-semibold text-gray-400 hover:text-white transition-colors shrink-0 whitespace-nowrap"
             >
               <AlertTriangle className="h-3.5 w-3.5" /> Report Issue
             </a>
+            </div>
           </nav>
 
           {/* User Session Profile */}
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 sm:gap-3 shrink-0">
             {user ? (
-              <div className="flex items-center gap-3">
-                <div className="hidden lg:block text-right">
-                  <span className="block text-xs font-semibold text-white">
+              <div className="flex items-center gap-2 sm:gap-3">
+                <div className="hidden xl:block text-right max-w-[180px]">
+                  <span className="block text-xs font-semibold text-white truncate">
                     {user.name || "Complete Profile"}
                   </span>
-                  <span className="block text-[10px] text-gray-400">
+                  <span className="block text-[10px] text-gray-400 truncate">
                     {user.branch ? `${user.branch} • Year ${user.year}` : user.kiet_email}
                   </span>
                 </div>
@@ -157,7 +159,7 @@ export default function Navbar() {
 
                 <button
                   onClick={handleLogout}
-                  className="hidden md:block p-2 text-gray-400 hover:text-red-400 rounded-md hover:bg-red-500/10 transition-colors"
+                  className="hidden md:block p-2 text-gray-400 hover:text-red-400 rounded-md hover:bg-red-500/10 transition-colors shrink-0"
                   title="Sign Out"
                 >
                   <LogOut className="h-4 w-4" />
@@ -175,7 +177,7 @@ export default function Navbar() {
             {/* Mobile menu toggle */}
             <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="md:hidden p-2 rounded-md text-gray-400 hover:text-white hover:bg-white/5 transition-colors"
+              className="md:hidden p-2 rounded-md text-gray-400 hover:text-white hover:bg-white/5 transition-colors shrink-0"
             >
               {mobileMenuOpen ? <CloseIcon className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
             </button>
@@ -186,7 +188,7 @@ export default function Navbar() {
 
       {/* Mobile Menu Dropdown */}
       {mobileMenuOpen && (
-        <div className="md:hidden border-t border-white/10 bg-[#080f25] px-4 pt-2 pb-4 space-y-2">
+        <div className="md:hidden border-t border-white/10 bg-[#080f25] px-4 pt-3 pb-4 space-y-2 max-h-[70vh] overflow-y-auto">
           {navItems.map((item) => {
             const Icon = item.icon;
             const isActive = pathname === item.href;
@@ -195,7 +197,7 @@ export default function Navbar() {
                 key={item.href}
                 href={item.href}
                 onClick={() => setMobileMenuOpen(false)}
-                className={`flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium transition-colors ${isActive
+                className={`flex items-center gap-3 px-3 py-3 rounded-xl text-sm font-medium transition-colors ${isActive
                     ? "text-[#f97316] bg-[#f97316]/10"
                     : "text-gray-300 hover:text-white hover:bg-white/5"
                   }`}
@@ -209,7 +211,7 @@ export default function Navbar() {
             <Link
               href="/admin"
               onClick={() => setMobileMenuOpen(false)}
-              className={`flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium transition-colors ${pathname === "/admin"
+              className={`flex items-center gap-3 px-3 py-3 rounded-xl text-sm font-medium transition-colors ${pathname === "/admin"
                   ? "text-[#eab308] bg-[#eab308]/10"
                   : "text-gray-300 hover:text-[#eab308]"
                 }`}
@@ -222,7 +224,7 @@ export default function Navbar() {
             <Link
               href="/mentors/dashboard"
               onClick={() => setMobileMenuOpen(false)}
-              className={`flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium transition-colors ${pathname === "/mentors/dashboard"
+              className={`flex items-center gap-3 px-3 py-3 rounded-xl text-sm font-medium transition-colors ${pathname === "/mentors/dashboard"
                   ? "text-[#10b981] bg-[#10b981]/10"
                   : "text-gray-300 hover:text-[#10b981]"
                 }`}
@@ -233,7 +235,7 @@ export default function Navbar() {
           )}
           <a
             href="mailto:sih-support@kiet.edu?subject=SIH%20Team%20Finder%20Feedback"
-            className="flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium text-gray-400 hover:text-white transition-colors"
+            className="flex items-center gap-3 px-3 py-3 rounded-xl text-sm font-medium text-gray-400 hover:text-white transition-colors"
           >
             <AlertTriangle className="h-4 w-4" /> Report Issue
           </a>
