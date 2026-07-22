@@ -20,7 +20,7 @@ export default function Navbar() {
     MockDB.getCurrentUser().then(setUser);
 
     // Keep in sync with auth state changes (e.g. sign-out in another tab)
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, _session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event: string, _session: any) => {
       MockDB.getCurrentUser().then(setUser);
     });
 

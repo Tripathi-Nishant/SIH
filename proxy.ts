@@ -1,17 +1,23 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { createServerClient } from "@supabase/ssr";
-import { getRequiredEnv } from "./lib/env";
 
 const PROTECTED_ROUTES = ["/dashboard", "/browse", "/teams", "/onboard", "/admin", "/hall-of-fame", "/settings", "/mentors"];
 const ADMIN_ONLY_ROUTES = ["/admin", "/mentors/dashboard"];
 const PROFILE_COMPLETE_THRESHOLD = 80;
 
 export default async function proxy(request: NextRequest) {
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL?.trim();
+  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY?.trim();
+
+  if (!supabaseUrl || !supabaseAnonKey) {
+    return NextResponse.next({ request });
+  }
+
   let supabaseResponse = NextResponse.next({ request });
 
   const supabase = createServerClient(
-    getRequiredEnv("NEXT_PUBLIC_SUPABASE_URL"),
-    getRequiredEnv("NEXT_PUBLIC_SUPABASE_ANON_KEY"),
+    supabaseUrl,
+    supabaseAnonKey,
     {
       cookies: {
         getAll() {

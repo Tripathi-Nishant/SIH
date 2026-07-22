@@ -3,10 +3,15 @@ import { createClient } from "@supabase/supabase-js";
 import type { NextRequest } from "next/server";
 import type { Profile } from "./db";
 import { getRequiredEnv } from "./env";
+import { createNoopSupabaseClient } from "./supabaseFallback";
 
 export async function getAuthenticatedUser(request: NextRequest) {
-  const supabaseUrl = getRequiredEnv("NEXT_PUBLIC_SUPABASE_URL");
-  const supabaseAnonKey = getRequiredEnv("NEXT_PUBLIC_SUPABASE_ANON_KEY");
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL?.trim();
+  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY?.trim();
+
+  if (!supabaseUrl || !supabaseAnonKey) {
+    return { user: null, profile: null, supabase: createNoopSupabaseClient() };
+  }
 
   const supabase = createServerClient(supabaseUrl, supabaseAnonKey, {
     cookies: {
@@ -38,8 +43,11 @@ export async function getAuthenticatedUser(request: NextRequest) {
 }
 
 export function getServiceClient() {
-  const url = getRequiredEnv("NEXT_PUBLIC_SUPABASE_URL");
-  const key = getRequiredEnv("SUPABASE_SERVICE_ROLE_KEY");
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL?.trim();
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY?.trim();
+  if (!url || !key) {
+    return createNoopSupabaseClient() as any;
+  }
   return createClient(url, key);
 }
 

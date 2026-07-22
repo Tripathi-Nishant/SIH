@@ -1,7 +1,6 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { createServerClient } from "@supabase/ssr";
-import { getRequiredEnv } from "@/lib/env";
 
 const ALLOWED_DOMAINS = ["kiet.edu", "student.kiet.in", "kiet.in"];
 
@@ -19,11 +18,17 @@ export async function GET(request: NextRequest) {
     return NextResponse.redirect(`${origin}/?error=missing_code`);
   }
 
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL?.trim();
+  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY?.trim();
+  if (!supabaseUrl || !supabaseAnonKey) {
+    return NextResponse.redirect(`${origin}/?error=supabase_not_configured`);
+  }
+
   const supabaseResponse = NextResponse.redirect(`${origin}${next}`);
 
   const supabase = createServerClient(
-    getRequiredEnv("NEXT_PUBLIC_SUPABASE_URL"),
-    getRequiredEnv("NEXT_PUBLIC_SUPABASE_ANON_KEY"),
+    supabaseUrl,
+    supabaseAnonKey,
     {
       cookies: {
         getAll() {

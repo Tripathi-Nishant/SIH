@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { verifyOAuthState } from "@/lib/oauth-state";
-import { getRequiredEnv } from "@/lib/env";
 
 export const dynamic = "force-dynamic";
 
@@ -19,12 +18,18 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: "Invalid OAuth state" }, { status: 403 });
   }
 
-  const clientId = getRequiredEnv("GITHUB_CLIENT_ID");
-  const clientSecret = getRequiredEnv("GITHUB_CLIENT_SECRET");
+  const clientId = process.env.GITHUB_CLIENT_ID?.trim();
+  const clientSecret = process.env.GITHUB_CLIENT_SECRET?.trim();
+  if (!clientId || !clientSecret) {
+    return NextResponse.json({ error: "GitHub integration environment variables not configured" }, { status: 500 });
+  }
 
   // Create Supabase admin client lazily inside the handler (avoids build-time env validation)
-  const supabaseUrl = getRequiredEnv("NEXT_PUBLIC_SUPABASE_URL");
-  const serviceKey = getRequiredEnv("SUPABASE_SERVICE_ROLE_KEY");
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL?.trim();
+  const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY?.trim();
+  if (!supabaseUrl || !serviceKey) {
+    return NextResponse.json({ error: "Supabase environment variables not configured" }, { status: 500 });
+  }
   const supabase = createClient(supabaseUrl, serviceKey);
 
   try {
