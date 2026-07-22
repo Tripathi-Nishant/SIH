@@ -7,7 +7,7 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
 import { MockDB, Profile } from "@/lib/db";
 import { isAdminUser } from "@/lib/admin";
-import { LogOut, User, Users, Search, Award, ShieldAlert, AlertTriangle, Menu, X as CloseIcon, LayoutDashboard, UserCircle } from "lucide-react";
+import { LogOut, Users, Search, Award, ShieldAlert, AlertTriangle, Menu, X as CloseIcon, LayoutDashboard, UserCircle, Bell, BookOpen } from "lucide-react";
 
 export default function Navbar() {
   const router = useRouter();
@@ -35,8 +35,10 @@ export default function Navbar() {
 
   const navItems = [
     { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
+    { name: "Activity", href: "/notifications", icon: Bell },
     { name: "Browse", href: "/browse", icon: Search },
     { name: "Team Finder", href: "/teams", icon: Users },
+    { name: "Mentors", href: "/mentors", icon: BookOpen },
     { name: "My Profile", href: "/profile", icon: UserCircle },
     { name: "Hall of Fame", href: "/hall-of-fame", icon: Award },
   ];
@@ -103,6 +105,18 @@ export default function Navbar() {
               >
                 <ShieldAlert className="h-4 w-4" />
                 Admin Panel
+              </Link>
+            )}
+            {(isAdmin || user?.role === "faculty") && (
+              <Link
+                href="/mentors/dashboard"
+                className={`flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-colors ${pathname === "/mentors/dashboard"
+                    ? "text-[#10b981] bg-[#10b981]/10"
+                    : "text-gray-300 hover:text-[#10b981] hover:bg-[#10b981]/5"
+                  }`}
+              >
+                <BookOpen className="h-4 w-4" />
+                Mentor Hub
               </Link>
             )}
             <a
@@ -202,6 +216,19 @@ export default function Navbar() {
             >
               <ShieldAlert className="h-4 w-4" />
               Admin Panel
+            </Link>
+          )}
+          {(isAdmin || user?.role === "faculty") && (
+            <Link
+              href="/mentors/dashboard"
+              onClick={() => setMobileMenuOpen(false)}
+              className={`flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium transition-colors ${pathname === "/mentors/dashboard"
+                  ? "text-[#10b981] bg-[#10b981]/10"
+                  : "text-gray-300 hover:text-[#10b981]"
+                }`}
+            >
+              <BookOpen className="h-4 w-4" />
+              Mentor Hub
             </Link>
           )}
           <a

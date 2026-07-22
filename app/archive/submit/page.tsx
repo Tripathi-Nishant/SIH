@@ -212,9 +212,9 @@ export default function ArchiveSubmitPage() {
                 <li>Future users will see your retrospective and file link publicly.</li>
               </ul>
             </div>
-            <div className="rounded-3xl border border-dashed border-[#f97316]/30 bg-[#f97316]/5 p-6 text-sm text-orange-100">
+            {/* <div className="rounded-3xl border border-dashed border-[#f97316]/30 bg-[#f97316]/5 p-6 text-sm text-orange-100">
               This flow is now production-aligned with Supabase Storage and the `archive_ppts` table.
-            </div>
+            </div> */}
           </aside>
         </div>
       </main>

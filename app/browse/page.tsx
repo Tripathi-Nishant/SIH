@@ -3,7 +3,8 @@
 import { useEffect, useState } from "react";
 import { MockDB, Profile, Team, Skill, UserSkill, Rating, TeamMember } from "@/lib/db";
 import Navbar from "@/components/Navbar";
-import { Search, ShieldCheck, Mail, Send, ExternalLink, Info, Award } from "lucide-react";
+import { getSavedStudents, getSavedTeams, isStudentSaved, isTeamSaved, toggleSavedStudent, toggleSavedTeam } from "@/lib/shortlist";
+import { Search, ShieldCheck, Mail, Send, ExternalLink, Info, Award, Bookmark, BookmarkCheck } from "lucide-react";
 
 export default function BrowsePage() {
   const [user, setUser] = useState<Profile | null>(null);
@@ -28,6 +29,8 @@ export default function BrowsePage() {
   const [reqPitch, setReqPitch] = useState("");
   const [activeInviteStudentId, setActiveInviteStudentId] = useState<string | null>(null);
   const [invitePitch, setInvitePitch] = useState("");
+  const [savedTeams, setSavedTeams] = useState<string[]>([]);
+  const [savedStudents, setSavedStudents] = useState<string[]>([]);
 
   const loadData = async () => {
     setLoading(true);
@@ -47,6 +50,10 @@ export default function BrowsePage() {
     setUserSkills(userSkillsData);
     setRatings(ratingsData);
     setMembers(membersData);
+    if (currentUser) {
+      setSavedTeams(getSavedTeams(currentUser.id));
+      setSavedStudents(getSavedStudents(currentUser.id));
+    }
     setLoading(false);
   };
 
@@ -98,6 +105,18 @@ export default function BrowsePage() {
 
   const checkGithubVerified = (userId: string) => {
     return userSkills.some(us => us.user_id === userId && us.source === 'github-verified');
+  };
+
+  const handleToggleTeamSave = (teamId: string) => {
+    if (!user) return;
+    toggleSavedTeam(user.id, teamId);
+    setSavedTeams(getSavedTeams(user.id));
+  };
+
+  const handleToggleStudentSave = (studentId: string) => {
+    if (!user) return;
+    toggleSavedStudent(user.id, studentId);
+    setSavedStudents(getSavedStudents(user.id));
   };
 
   const filteredTeams = teams.filter(t => {
@@ -288,14 +307,25 @@ export default function BrowsePage() {
                         </div>
                       </div>
                     ) : (
-                      user && (
-                        <button
-                          onClick={() => setActiveReqTeamId(team.id)}
-                          className="px-3 py-1.5 bg-[#f97316] hover:bg-[#ea580c] text-white text-xs font-semibold rounded-lg transition-colors flex items-center gap-1"
-                        >
-                          Request to Join <Send className="h-3 w-3" />
-                        </button>
-                      )
+                      <div className="flex items-center gap-2">
+                        {user && (
+                          <button
+                            onClick={() => handleToggleTeamSave(team.id)}
+                            className="px-3 py-1.5 bg-white/5 hover:bg-white/10 text-gray-200 text-xs font-semibold rounded-lg transition-colors flex items-center gap-1 border border-white/10"
+                          >
+                            {isTeamSaved(user.id, team.id) ? <BookmarkCheck className="h-3 w-3 text-[#10b981]" /> : <Bookmark className="h-3 w-3" />}
+                            {savedTeams.includes(team.id) ? "Saved" : "Save"}
+                          </button>
+                        )}
+                        {user && (
+                          <button
+                            onClick={() => setActiveReqTeamId(team.id)}
+                            className="px-3 py-1.5 bg-[#f97316] hover:bg-[#ea580c] text-white text-xs font-semibold rounded-lg transition-colors flex items-center gap-1"
+                          >
+                            Request to Join <Send className="h-3 w-3" />
+                          </button>
+                        )}
+                      </div>
                     )}
                   </div>
                 </div>
@@ -418,14 +448,25 @@ export default function BrowsePage() {
                           </div>
                         </div>
                       ) : (
-                        user && (
-                          <button
-                            onClick={() => setActiveInviteStudentId(student.id)}
-                            className="px-2.5 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold rounded-lg transition-colors flex items-center gap-1"
-                          >
-                            Invite to Team <Mail className="h-3.5 w-3.5" />
-                          </button>
-                        )
+                        <div className="flex items-center gap-2">
+                          {user && (
+                            <button
+                              onClick={() => handleToggleStudentSave(student.id)}
+                              className="px-2.5 py-1.5 bg-white/5 hover:bg-white/10 text-gray-200 text-xs font-semibold rounded-lg transition-colors flex items-center gap-1 border border-white/10"
+                            >
+                              {isStudentSaved(user.id, student.id) ? <BookmarkCheck className="h-3 w-3 text-[#10b981]" /> : <Bookmark className="h-3 w-3" />}
+                              {savedStudents.includes(student.id) ? "Saved" : "Save"}
+                            </button>
+                          )}
+                          {user && (
+                            <button
+                              onClick={() => setActiveInviteStudentId(student.id)}
+                              className="px-2.5 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold rounded-lg transition-colors flex items-center gap-1"
+                            >
+                              Invite to Team <Mail className="h-3.5 w-3.5" />
+                            </button>
+                          )}
+                        </div>
                       )}
                     </div>
                   </div>

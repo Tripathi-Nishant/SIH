@@ -57,6 +57,63 @@ export interface TeamMember {
   joined_at: string;
 }
 
+export interface MentorProfile {
+  id: string;
+  department?: string | null;
+  expertise?: string[] | null;
+  bio?: string | null;
+  available_hours?: string | null;
+  office_hours?: string | null;
+  meeting_link?: string | null;
+  max_teams?: number | null;
+  is_active?: boolean | null;
+  created_at?: string;
+  updated_at?: string;
+  profiles?: Profile | Profile[] | null;
+}
+
+export interface MentorRequest {
+  id: string;
+  team_id: string;
+  requester_id: string;
+  mentor_id: string;
+  note?: string | null;
+  status: "pending" | "accepted" | "rejected" | "withdrawn";
+  created_at: string;
+  responded_at?: string | null;
+  team?: Team | Team[] | null;
+  requester?: Profile | Profile[] | null;
+  mentor?: Profile | Profile[] | null;
+}
+
+export interface TeamMentor {
+  id: string;
+  team_id: string;
+  mentor_id: string;
+  assigned_from_request_id?: string | null;
+  active?: boolean | null;
+  assigned_at?: string;
+  team?: Team | Team[] | null;
+  mentor?: Profile | Profile[] | null;
+}
+
+export interface TeamChatMessage {
+  id: string;
+  team_id: string;
+  sender_id: string;
+  message: string;
+  created_at: string;
+  profiles?: {
+    id: string;
+    name?: string | null;
+    avatar_url?: string | null;
+  } | {
+    id: string;
+    name?: string | null;
+    avatar_url?: string | null;
+  }[] | null;
+}
+
 export interface Request {
   id: string;
   sender_id: string;
@@ -160,6 +217,101 @@ export class MockDB {
     const { data, error } = await supabase.from("requests").select("*");
     if (error || !data) return [];
     return data as Request[];
+  }
+
+  static async getMentors(): Promise<MentorProfile[]> {
+    const { data, error } = await supabase
+      .from("mentor_profiles")
+      .select("*, profiles:profiles(*)")
+      .eq("is_active", true)
+      .order("created_at", { ascending: false });
+    if (error || !data) return [];
+    return data as unknown as MentorProfile[];
+  }
+
+  static async getMyMentorProfile(): Promise<MentorProfile | null> {
+    const { data, error } = await supabase
+      .from("mentor_profiles")
+      .select("*, profiles:profiles(*)")
+      .eq("id", (await supabase.auth.getUser()).data.user?.id || "")
+      .maybeSingle();
+    if (error || !data) return null;
+    return data as unknown as MentorProfile;
+  }
+
+  static async getMentorRequests(): Promise<MentorRequest[]> {
+    const { data, error } = await supabase
+      .from("mentor_requests")
+      .select("*, team:teams(*), requester:profiles!mentor_requests_requester_id_fkey(*), mentor:profiles!mentor_requests_mentor_id_fkey(*)")
+      .order("created_at", { ascending: false });
+    if (error || !data) return [];
+    return data as unknown as MentorRequest[];
+  }
+
+  static async getTeamMentors(teamId?: string): Promise<TeamMentor[]> {
+    let query = supabase
+      .from("team_mentors")
+      .select("*, team:teams(*), mentor:profiles!team_mentors_mentor_id_fkey(*)")
+      .eq("active", true)
+      .order("assigned_at", { ascending: false });
+    if (teamId) query = query.eq("team_id", teamId);
+    const { data, error } = await query;
+    if (error || !data) return [];
+    return data as unknown as TeamMentor[];
+  }
+
+  static async saveMentorProfile(profile: Partial<MentorProfile>) {
+    const { data: authData } = await supabase.auth.getUser();
+    const userId = authData.user?.id;
+    if (!userId) throw new Error("Unauthorized");
+
+    const payload = {
+      id: userId,
+      department: profile.department || null,
+      expertise: profile.expertise || [],
+      bio: profile.bio || null,
+      available_hours: profile.available_hours || null,
+      office_hours: profile.office_hours || null,
+      meeting_link: profile.meeting_link || null,
+      max_teams: profile.max_teams ?? 3,
+      is_active: profile.is_active ?? true,
+    };
+
+    const { error } = await supabase.from("mentor_profiles").upsert(payload);
+    if (error) throw new Error(error.message);
+  }
+
+  static async requestMentor(teamId: string, mentorId: string, note?: string) {
+    const { request } = await apiRequest<{ request: MentorRequest }>("/api/mentor-requests", {
+      method: "POST",
+      body: JSON.stringify({ team_id: teamId, mentor_id: mentorId, note }),
+    });
+    return request;
+  }
+
+  static async respondToMentorRequest(requestId: string, status: "accepted" | "rejected" | "withdrawn") {
+    return apiRequest<{ request: MentorRequest }>("/api/mentor-requests", {
+      method: "PATCH",
+      body: JSON.stringify({ request_id: requestId, status }),
+    });
+  }
+
+  static async getTeamChatMessages(teamId: string): Promise<TeamChatMessage[]> {
+    const { data, error } = await supabase
+      .from("team_chat_messages")
+      .select("id, team_id, sender_id, message, created_at, profiles:sender_id (id, name, avatar_url)")
+      .eq("team_id", teamId)
+      .order("created_at", { ascending: true });
+    if (error || !data) return [];
+    return data as unknown as TeamChatMessage[];
+  }
+
+  static async sendTeamChatMessage(teamId: string, message: string): Promise<TeamChatMessage> {
+    const { message: sent } = await apiRequest<{ message: TeamChatMessage }>("/api/team-chat", {
+      method: "POST",
+      body: JSON.stringify({ team_id: teamId, message }),
+    });
+    return sent;
   }
 
   static async getReports(): Promise<any[]> {
@@ -328,6 +480,21 @@ export class MockDB {
       .on(
         "postgres_changes",
         { event: "*", schema: "public", table: "requests" },
+        onChange
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }
+
+  static subscribeToTeamChat(teamId: string, onChange: () => void) {
+    const channel = supabase
+      .channel(`team-chat-${teamId}`)
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "team_chat_messages", filter: `team_id=eq.${teamId}` },
         onChange
       )
       .subscribe();

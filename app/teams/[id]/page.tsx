@@ -1,11 +1,13 @@
 "use client";
 
-import { useEffect, useState, use } from "react";
+import Link from "next/link";
+import { useEffect, useMemo, useState, use } from "react";
 import { useRouter } from "next/navigation";
-import { MockDB, Profile, Team, UserSkill, Skill } from "@/lib/db";
+import { MockDB, Profile, Team, TeamChatMessage, UserSkill, Skill, TeamMentor, MentorProfile } from "@/lib/db";
 import { isAdminUser } from "@/lib/admin";
+import { addTeamBoardTask, deleteTeamBoardTask, getTeamBoardTasks, TeamTask, updateTeamBoardTask } from "@/lib/team-board";
 import Navbar from "@/components/Navbar";
-import { ArrowLeft, Send, AlertCircle, Edit2, Trash2, Save } from "lucide-react";
+import { ArrowLeft, Send, AlertCircle, Edit2, Trash2, Save, ListTodo, Plus, MoveRight, MessageSquare, SendHorizontal, Share2, Copy } from "lucide-react";
 
 interface PageProps {
   params: Promise<{ id: string }>;
@@ -27,6 +29,15 @@ export default function TeamDetailPage({ params }: PageProps) {
   const [editPsDomain, setEditPsDomain] = useState("");
   const [editVisibility, setEditVisibility] = useState<"public" | "private">("public");
   const [editCapacity, setEditCapacity] = useState(6);
+  const [teamTasks, setTeamTasks] = useState<TeamTask[]>([]);
+  const [teamMentor, setTeamMentor] = useState<TeamMentor | null>(null);
+  const [teamMentorProfile, setTeamMentorProfile] = useState<MentorProfile | null>(null);
+  const [newTaskTitle, setNewTaskTitle] = useState("");
+  const [teamChat, setTeamChat] = useState<TeamChatMessage[]>([]);
+  const [chatDraft, setChatDraft] = useState("");
+  const [chatLoading, setChatLoading] = useState(true);
+  const [chatSending, setChatSending] = useState(false);
+  const [shareCopied, setShareCopied] = useState(false);
 
   // Join pitch note state
   const [pitch, setPitch] = useState("");
@@ -53,6 +64,18 @@ export default function TeamDetailPage({ params }: PageProps) {
         setEditPsDomain(foundTeam.problem_statement_domain || "");
         setEditVisibility(foundTeam.visibility || "public");
         setEditCapacity(foundTeam.capacity || 6);
+        setTeamTasks(getTeamBoardTasks(foundTeam.id));
+        const [teamMentors, mentorProfiles] = await Promise.all([
+          MockDB.getTeamMentors(foundTeam.id),
+          MockDB.getMentors(),
+        ]);
+        const activeMentorAssignment = teamMentors[0] || null;
+        setTeamMentor(activeMentorAssignment);
+        setTeamMentorProfile(
+          activeMentorAssignment
+            ? mentorProfiles.find((mentor) => mentor.id === activeMentorAssignment.mentor_id) || null
+            : null
+        );
         
         const allMembers = await MockDB.getTeamMembers();
         const teamMems = allMembers
@@ -70,6 +93,39 @@ export default function TeamDetailPage({ params }: PageProps) {
     }
     loadData();
   }, [id]);
+
+  const isCurrentUserOnTeam = useMemo(() => {
+    if (!user || !team) return false;
+    return team.leader_id === user.id || members.some((member) => member.id === user.id);
+  }, [members, team, user]);
+
+  useEffect(() => {
+    let unsubscribe: (() => void) | null = null;
+
+    async function loadChat() {
+      if (!team || !user || !isCurrentUserOnTeam) {
+        setTeamChat([]);
+        setChatLoading(false);
+        return;
+      }
+
+      setChatLoading(true);
+      const messages = await MockDB.getTeamChatMessages(team.id);
+      setTeamChat(messages);
+      setChatLoading(false);
+
+      unsubscribe = MockDB.subscribeToTeamChat(team.id, async () => {
+        const refreshed = await MockDB.getTeamChatMessages(team.id);
+        setTeamChat(refreshed);
+      });
+    }
+
+    loadChat();
+
+    return () => {
+      if (unsubscribe) unsubscribe();
+    };
+  }, [team, user, isCurrentUserOnTeam]);
 
   const canManageTeam = !!user && !!team && (team.leader_id === user.id || isAdminUser(user));
 
@@ -105,6 +161,52 @@ export default function TeamDetailPage({ params }: PageProps) {
       router.push("/dashboard");
     } catch (err: any) {
       alert(err?.message || "Failed to delete team.");
+    }
+  };
+
+  const handleAddTask = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!team || !newTaskTitle.trim()) return;
+    setTeamTasks(addTeamBoardTask(team.id, newTaskTitle));
+    setNewTaskTitle("");
+  };
+
+  const handleMoveTask = (taskId: string, direction: "next" | "prev") => {
+    if (!team) return;
+    const task = teamTasks.find((item) => item.id === taskId);
+    if (!task) return;
+    const steps: TeamTask["status"][] = ["idea", "doing", "done"];
+    const currentIndex = steps.indexOf(task.status);
+    const nextIndex = direction === "next" ? Math.min(currentIndex + 1, steps.length - 1) : Math.max(currentIndex - 1, 0);
+    setTeamTasks(updateTeamBoardTask(team.id, taskId, steps[nextIndex]));
+  };
+
+  const handleDeleteTask = (taskId: string) => {
+    if (!team) return;
+    setTeamTasks(deleteTeamBoardTask(team.id, taskId));
+  };
+
+  const handleShareTeam = async () => {
+    if (!team) return;
+    const url = `${window.location.origin}/teams/${team.id}/public`;
+    await navigator.clipboard.writeText(url);
+    setShareCopied(true);
+    setTimeout(() => setShareCopied(false), 2000);
+  };
+
+  const handleSendChat = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!team || !chatDraft.trim()) return;
+
+    setChatSending(true);
+    try {
+      const sent = await MockDB.sendTeamChatMessage(team.id, chatDraft);
+      setTeamChat((prev) => [...prev, sent]);
+      setChatDraft("");
+    } catch (err: any) {
+      alert(err?.message || "Failed to send chat message.");
+    } finally {
+      setChatSending(false);
     }
   };
 
@@ -196,6 +298,22 @@ export default function TeamDetailPage({ params }: PageProps) {
             </div>
           )}
 
+          <div className="flex flex-wrap gap-2">
+            <button
+              onClick={handleShareTeam}
+              className="px-3 py-2 rounded-lg bg-[#10b981]/10 border border-[#10b981]/20 text-xs font-semibold text-[#10b981] hover:bg-[#10b981]/20 flex items-center gap-2"
+            >
+              {shareCopied ? <Copy className="h-3.5 w-3.5" /> : <Share2 className="h-3.5 w-3.5" />}
+              {shareCopied ? "Link Copied" : "Copy Public Link"}
+            </button>
+            <Link
+              href={`/teams/${team.id}/public`}
+              className="px-3 py-2 rounded-lg bg-white/5 border border-white/10 text-xs font-semibold text-gray-200 hover:bg-white/10 flex items-center gap-2"
+            >
+              <Share2 className="h-3.5 w-3.5" /> Open Public Profile
+            </Link>
+          </div>
+
           <div className="space-y-4">
             <div className="p-3 bg-white/5 rounded-xl border border-white/5">
               <span className="block text-[9px] text-[#f97316] font-bold uppercase tracking-wider">
@@ -205,6 +323,228 @@ export default function TeamDetailPage({ params }: PageProps) {
                 {team.problem_statement_title}
               </strong>
             </div>
+
+            <div className="rounded-xl border border-white/10 bg-black/20 p-4 space-y-3">
+              <div className="flex items-center justify-between gap-3">
+                <div>
+                  <span className="block text-[9px] text-gray-400 uppercase font-bold tracking-wider">
+                    Faculty Mentor
+                  </span>
+                  <strong className="block text-white text-sm mt-0.5">
+                    {teamMentorProfile?.profiles && !Array.isArray(teamMentorProfile.profiles)
+                      ? teamMentorProfile.profiles.name
+                      : teamMentorProfile?.profiles && Array.isArray(teamMentorProfile.profiles)
+                        ? teamMentorProfile.profiles[0]?.name
+                        : teamMentor
+                          ? "Assigned mentor"
+                          : "No mentor assigned yet"}
+                  </strong>
+                </div>
+                {teamMentor ? (
+                  <span className="px-2.5 py-0.5 rounded bg-[#10b981]/10 border border-[#10b981]/20 text-[#10b981] text-[10px] font-semibold">
+                    Active
+                  </span>
+                ) : (
+                  <span className="px-2.5 py-0.5 rounded bg-white/5 border border-white/10 text-gray-300 text-[10px] font-semibold">
+                    Available
+                  </span>
+                )}
+              </div>
+              {teamMentor ? (
+                <>
+                  <p className="text-xs text-gray-400">
+                    {teamMentorProfile?.department || "Department not set"}
+                  </p>
+                  <p className="text-xs text-gray-300">
+                    {teamMentorProfile?.bio || "Mentor bio not filled in yet."}
+                  </p>
+                  {teamMentorProfile?.meeting_link && (
+                    <a
+                      href={teamMentorProfile.meeting_link}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="inline-flex items-center gap-2 px-3 py-2 rounded-lg bg-[#10b981]/10 border border-[#10b981]/20 text-xs font-semibold text-[#10b981] hover:bg-[#10b981]/20"
+                    >
+                      Open Meeting Link
+                    </a>
+                  )}
+                </>
+              ) : (
+                <div className="flex flex-wrap items-center gap-2">
+                  <Link
+                    href={`/mentors?team_id=${team.id}`}
+                    className="inline-flex items-center gap-2 px-3 py-2 rounded-lg bg-[#10b981]/10 border border-[#10b981]/20 text-xs font-semibold text-[#10b981] hover:bg-[#10b981]/20"
+                  >
+                    <Send className="h-3.5 w-3.5" />
+                    Request Mentor
+                  </Link>
+                  <span className="text-xs text-gray-400">You can choose a faculty mentor from the mentor directory.</span>
+                </div>
+              )}
+            </div>
+
+            {isCurrentUserOnTeam && (
+              <div className="pt-2 border-t border-white/10 space-y-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h3 className="text-sm font-bold text-white flex items-center gap-2">
+                      <ListTodo className="h-4 w-4 text-[#10b981]" />
+                      Team Task Board
+                    </h3>
+                    <p className="text-[10px] text-gray-400 mt-1">Plan, track, and finish your SIH work inside the app.</p>
+                  </div>
+                  <span className="text-[10px] text-gray-400">{teamTasks.length} tasks</span>
+                </div>
+
+                <form onSubmit={handleAddTask} className="flex gap-2">
+                  <input
+                    value={newTaskTitle}
+                    onChange={(e) => setNewTaskTitle(e.target.value)}
+                    placeholder="Add a new task..."
+                    className="flex-1 rounded-lg bg-black/40 border border-white/10 px-3 py-2 text-xs text-white focus:outline-none focus:border-[#f97316]"
+                  />
+                  <button
+                    type="submit"
+                    className="px-3 py-2 rounded-lg bg-[#10b981] hover:bg-[#059669] text-white text-xs font-semibold inline-flex items-center gap-2"
+                  >
+                    <Plus className="h-3.5 w-3.5" /> Add
+                  </button>
+                </form>
+
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                  {[
+                    { key: "idea" as const, label: "Ideas" },
+                    { key: "doing" as const, label: "In Progress" },
+                    { key: "done" as const, label: "Done" },
+                  ].map((column) => (
+                    <div key={column.key} className="rounded-xl bg-black/20 border border-white/5 p-3">
+                      <div className="flex items-center justify-between mb-3">
+                        <span className="text-xs font-bold text-white">{column.label}</span>
+                        <span className="text-[10px] text-gray-400">
+                          {teamTasks.filter((task) => task.status === column.key).length}
+                        </span>
+                      </div>
+
+                      <div className="space-y-2 min-h-[80px]">
+                        {teamTasks.filter((task) => task.status === column.key).map((task) => (
+                          <div key={task.id} className="rounded-lg border border-white/10 bg-white/5 p-3 space-y-2">
+                            <div className="flex items-start justify-between gap-2">
+                              <p className="text-xs text-gray-100 leading-relaxed">{task.title}</p>
+                              <button
+                                type="button"
+                                onClick={() => handleDeleteTask(task.id)}
+                                className="text-red-300 hover:text-red-200"
+                              >
+                                <Trash2 className="h-3.5 w-3.5" />
+                              </button>
+                            </div>
+                            <div className="flex items-center justify-between">
+                              <span className="text-[10px] text-gray-500">
+                                {new Date(task.created_at).toLocaleDateString()}
+                              </span>
+                              <div className="flex gap-1">
+                                {column.key !== "idea" && (
+                                  <button
+                                    type="button"
+                                    onClick={() => handleMoveTask(task.id, "prev")}
+                                    className="px-2 py-1 rounded bg-white/5 text-[10px] text-gray-300 hover:bg-white/10"
+                                  >
+                                    Back
+                                  </button>
+                                )}
+                                {column.key !== "done" && (
+                                  <button
+                                    type="button"
+                                    onClick={() => handleMoveTask(task.id, "next")}
+                                    className="px-2 py-1 rounded bg-white/5 text-[10px] text-gray-300 hover:bg-white/10 inline-flex items-center gap-1"
+                                  >
+                                    Move <MoveRight className="h-3 w-3" />
+                                  </button>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {isCurrentUserOnTeam && (
+              <div className="pt-2 border-t border-white/10 space-y-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h3 className="text-sm font-bold text-white flex items-center gap-2">
+                      <MessageSquare className="h-4 w-4 text-[#f97316]" />
+                      Team Chat
+                    </h3>
+                    <p className="text-[10px] text-gray-400 mt-1">Quick coordination space for your squad.</p>
+                  </div>
+                  <span className="text-[10px] text-gray-400">{teamChat.length} messages</span>
+                </div>
+
+                <div className="rounded-xl border border-white/10 bg-black/20 p-3 max-h-[260px] overflow-y-auto space-y-2 custom-scrollbar">
+                  {chatLoading ? (
+                    <div className="space-y-2">
+                      <div className="h-10 rounded-lg bg-white/5 animate-pulse" />
+                      <div className="h-10 rounded-lg bg-white/5 animate-pulse" />
+                      <div className="h-10 rounded-lg bg-white/5 animate-pulse" />
+                    </div>
+                  ) : teamChat.length === 0 ? (
+                    <div className="text-center text-xs text-gray-500 py-8">
+                      No messages yet. Start the conversation.
+                    </div>
+                  ) : (
+                    teamChat.map((msg) => {
+                      const isMine = msg.sender_id === user?.id;
+                      const senderProfile = Array.isArray(msg.profiles) ? msg.profiles[0] : msg.profiles;
+                      const senderName = senderProfile?.name || (isMine ? "You" : "Member");
+                      return (
+                        <div
+                          key={msg.id}
+                          className={`flex ${isMine ? "justify-end" : "justify-start"}`}
+                        >
+                          <div className={`max-w-[85%] rounded-2xl px-3 py-2 border text-xs ${
+                            isMine
+                              ? "bg-[#f97316]/15 border-[#f97316]/20 text-white"
+                              : "bg-white/5 border-white/10 text-gray-200"
+                          }`}>
+                            <div className="flex items-center gap-2 mb-1">
+                              <span className="font-semibold text-[10px] uppercase tracking-wider text-gray-300">
+                                {senderName}
+                              </span>
+                              <span className="text-[10px] text-gray-500">
+                                {new Date(msg.created_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                              </span>
+                            </div>
+                            <p className="leading-relaxed whitespace-pre-wrap">{msg.message}</p>
+                          </div>
+                        </div>
+                      );
+                    })
+                  )}
+                </div>
+
+                <form onSubmit={handleSendChat} className="flex gap-2">
+                  <input
+                    value={chatDraft}
+                    onChange={(e) => setChatDraft(e.target.value)}
+                    placeholder="Write a message..."
+                    className="flex-1 rounded-lg bg-black/40 border border-white/10 px-3 py-2 text-xs text-white focus:outline-none focus:border-[#f97316]"
+                  />
+                  <button
+                    type="submit"
+                    disabled={chatSending}
+                    className="px-3 py-2 rounded-lg bg-[#f97316] hover:bg-[#ea580c] text-white text-xs font-semibold inline-flex items-center gap-2 disabled:opacity-60"
+                  >
+                    <SendHorizontal className="h-3.5 w-3.5" />
+                    {chatSending ? "Sending" : "Send"}
+                  </button>
+                </form>
+              </div>
+            )}
 
             <div>
               <span className="block text-[9px] text-gray-400 uppercase font-bold tracking-wider mb-2">

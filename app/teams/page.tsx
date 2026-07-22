@@ -4,7 +4,8 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import Navbar from "@/components/Navbar";
 import { MockDB, Profile, Team, Skill, UserSkill, TeamMember } from "@/lib/db";
-import { Search, Users, Sparkles, ArrowRight, ShieldCheck } from "lucide-react";
+import { getSavedTeams, isTeamSaved, toggleSavedTeam } from "@/lib/shortlist";
+import { Search, Users, Sparkles, ArrowRight, ShieldCheck, Bookmark, BookmarkCheck, Gauge } from "lucide-react";
 
 export default function TeamFinderPage() {
   const [user, setUser] = useState<Profile | null>(null);
@@ -12,6 +13,7 @@ export default function TeamFinderPage() {
   const [skills, setSkills] = useState<Skill[]>([]);
   const [userSkills, setUserSkills] = useState<UserSkill[]>([]);
   const [members, setMembers] = useState<TeamMember[]>([]);
+  const [savedTeams, setSavedTeams] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -30,6 +32,9 @@ export default function TeamFinderPage() {
       setSkills(skillsData);
       setUserSkills(userSkillsData);
       setMembers(membersData);
+      if (currentUser) {
+        setSavedTeams(getSavedTeams(currentUser.id));
+      }
       setLoading(false);
     }
 
@@ -49,6 +54,22 @@ export default function TeamFinderPage() {
     const mySkillIds = userSkills.filter((s) => s.user_id === user.id).map((s) => s.skill_id);
     const mySkillNames = mySkillIds.map((id) => skills.find((skill) => skill.id === id)?.name).filter(Boolean) as string[];
     return team.required_skills_json.filter((slot) => mySkillNames.includes(slot.skill)).length;
+  };
+
+  const getReadinessScore = (team: Team) => {
+    const memberCount = getMemberCount(team.id);
+    const skillSlots = team.required_skills_json.length;
+    const filledRatio = Math.min(memberCount / Math.max(team.capacity, 1), 1);
+    const skillRatio = skillSlots === 0 ? 0.35 : Math.min(skillSlots / 4, 1);
+    const statusBoost = team.status === "open" ? 0.15 : 0.05;
+    return Math.round((filledRatio * 0.45 + skillRatio * 0.4 + statusBoost) * 100);
+  };
+
+  const handleToggleSave = (teamId: string) => {
+    if (!user) return;
+    const nowSaved = toggleSavedTeam(user.id, teamId);
+    setSavedTeams(getSavedTeams(user.id));
+    return nowSaved;
   };
 
   const featuredTeams = [...teams]
@@ -133,6 +154,8 @@ export default function TeamFinderPage() {
                 const memberCount = getMemberCount(team.id);
                 const overlap = getSkillOverlap(team);
                 const skillsList = getTeamSkills(team);
+                const readiness = getReadinessScore(team);
+                const saved = user ? isTeamSaved(user.id, team.id) : false;
 
                 return (
                   <div key={team.id} className="glass rounded-2xl border border-white/10 p-5 flex flex-col gap-4">
@@ -161,16 +184,43 @@ export default function TeamFinderPage() {
                       )}
                     </div>
 
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between text-xs">
+                        <span className="text-gray-400 flex items-center gap-2">
+                          <Gauge className="h-3.5 w-3.5 text-[#10b981]" />
+                          Readiness Score
+                        </span>
+                        <span className="text-white font-semibold">{readiness}%</span>
+                      </div>
+                      <div className="h-2 rounded-full bg-white/5 overflow-hidden">
+                        <div
+                          className="h-full rounded-full bg-gradient-to-r from-[#f97316] via-yellow-400 to-[#10b981]"
+                          style={{ width: `${readiness}%` }}
+                        />
+                      </div>
+                    </div>
+
                     <div className="flex items-center justify-between pt-3 border-t border-white/5">
                       <div className="text-xs text-gray-400">
                         Skill overlap: <span className="text-white font-semibold">{overlap}</span>
                       </div>
-                      <Link
-                        href={`/teams/${team.id}`}
-                        className="inline-flex items-center gap-2 px-3 py-2 rounded-lg bg-white/5 border border-white/10 text-xs font-semibold text-gray-200 hover:bg-white/10 transition-colors"
-                      >
-                        View Team <ArrowRight className="h-3.5 w-3.5" />
-                      </Link>
+                      <div className="flex items-center gap-2">
+                        {user && (
+                          <button
+                            onClick={() => handleToggleSave(team.id)}
+                            className="inline-flex items-center gap-2 px-3 py-2 rounded-lg bg-white/5 border border-white/10 text-xs font-semibold text-gray-200 hover:bg-white/10 transition-colors"
+                          >
+                            {saved ? <BookmarkCheck className="h-3.5 w-3.5 text-[#10b981]" /> : <Bookmark className="h-3.5 w-3.5" />}
+                            {saved ? "Saved" : "Save"}
+                          </button>
+                        )}
+                        <Link
+                          href={`/teams/${team.id}`}
+                          className="inline-flex items-center gap-2 px-3 py-2 rounded-lg bg-white/5 border border-white/10 text-xs font-semibold text-gray-200 hover:bg-white/10 transition-colors"
+                        >
+                          View Team <ArrowRight className="h-3.5 w-3.5" />
+                        </Link>
+                      </div>
                     </div>
                   </div>
                 );
