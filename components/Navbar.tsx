@@ -28,6 +28,11 @@ export default function Navbar() {
     return () => subscription.unsubscribe();
   }, []);
 
+  useEffect(() => {
+    setMobileMenuOpen(false);
+    setMoreMenuOpen(false);
+  }, [pathname]);
+
   const handleLogout = async () => {
     await supabase.auth.signOut();
     setUser(null);
@@ -39,11 +44,11 @@ export default function Navbar() {
     { name: "Activity", href: "/notifications", icon: Bell },
     { name: "Browse", href: "/browse", icon: Search },
     { name: "Team Finder", href: "/teams", icon: Users },
-    { name: "Mentors", href: "/mentors", icon: BookOpen },
-    { name: "My Profile", href: "/profile", icon: UserCircle },
   ];
 
   const moreItems = [
+    { name: "Mentors", href: "/mentors", icon: BookOpen },
+    { name: "My Profile", href: "/profile", icon: UserCircle },
     { name: "Hall of Fame", href: "/hall-of-fame", icon: Award },
   ];
 
@@ -64,7 +69,7 @@ export default function Navbar() {
       </div>
 
       <div className="max-w-screen-2xl mx-auto px-3 sm:px-4 lg:px-6">
-        <div className="flex items-center justify-between gap-3 py-2.5 lg:py-3">
+        <div className="grid grid-cols-[auto_1fr_auto] items-center gap-3 py-2.5 lg:py-3">
 
           {/* Logo brand */}
           <div className="flex items-center gap-2.5 sm:gap-3 shrink-0">
@@ -82,8 +87,8 @@ export default function Navbar() {
           </div>
 
           {/* Desktop Navigation Links */}
-          <nav className="hidden lg:flex flex-1 items-center justify-center px-2 min-w-0">
-            <div className="flex items-center gap-2.5 xl:gap-3 whitespace-nowrap min-w-0">
+          <nav className="hidden lg:flex items-center justify-center px-2 min-w-0">
+            <div className="flex items-center gap-2 xl:gap-2.5 whitespace-nowrap min-w-0">
             {navItems.map((item) => {
               const Icon = item.icon;
               const isActive = pathname === item.href;
@@ -101,31 +106,6 @@ export default function Navbar() {
                 </Link>
               );
             })}
-            {isAdmin && (
-              <Link
-                href="/admin"
-                className={`flex items-center gap-2 px-3 py-2.5 rounded-full text-xs xl:text-sm font-semibold transition-colors shrink-0 whitespace-nowrap border ${pathname === "/admin"
-                    ? "text-[#eab308] bg-[#eab308]/12 border-[#eab308]/15"
-                    : "text-gray-300 border-transparent hover:text-[#eab308] hover:bg-[#eab308]/5 hover:border-[#eab308]/10"
-                  }`}
-              >
-                <ShieldAlert className="h-4 w-4" />
-                Admin Panel
-              </Link>
-            )}
-            {(isAdmin || user?.role === "faculty") && (
-              <Link
-                href="/mentors/dashboard"
-                className={`flex items-center gap-2 px-3 py-2.5 rounded-full text-xs xl:text-sm font-semibold transition-colors shrink-0 whitespace-nowrap border ${pathname === "/mentors/dashboard"
-                    ? "text-[#10b981] bg-[#10b981]/12 border-[#10b981]/15"
-                    : "text-gray-300 border-transparent hover:text-[#10b981] hover:bg-[#10b981]/5 hover:border-[#10b981]/10"
-                  }`}
-              >
-                <BookOpen className="h-4 w-4" />
-                Mentor Hub
-              </Link>
-            )}
-
             <div className="relative shrink-0">
               <button
                 type="button"
@@ -160,6 +140,19 @@ export default function Navbar() {
                       </Link>
                     );
                   })}
+                  {(isAdmin || user?.role === "faculty") && (
+                    <Link
+                      href="/mentors/dashboard"
+                      onClick={() => setMoreMenuOpen(false)}
+                      className={`flex items-center gap-3 px-4 py-3 text-sm transition-colors ${pathname === "/mentors/dashboard"
+                          ? "bg-[#10b981]/10 text-[#10b981]"
+                          : "text-gray-200 hover:bg-white/5 hover:text-white"
+                        }`}
+                    >
+                      <BookOpen className="h-4 w-4" />
+                      Mentor Hub
+                    </Link>
+                  )}
                   {isAdmin && (
                     <Link
                       href="/admin"
@@ -231,11 +224,10 @@ export default function Navbar() {
 
                 <button
                   onClick={handleLogout}
-                  className="hidden md:inline-flex items-center gap-2 px-3 py-2 rounded-full text-xs font-semibold text-gray-300 border border-white/5 hover:text-red-300 hover:bg-red-500/10 hover:border-red-500/20 transition-colors shrink-0"
+                  className="hidden md:inline-flex items-center justify-center h-10 w-10 rounded-full text-gray-300 border border-white/5 hover:text-red-300 hover:bg-red-500/10 hover:border-red-500/20 transition-colors shrink-0"
                   title="Sign Out"
                 >
                   <LogOut className="h-4 w-4" />
-                  Sign Out
                 </button>
               </div>
             ) : (
@@ -317,6 +309,19 @@ export default function Navbar() {
               Mentor Hub
             </Link>
           )}
+          {(isAdmin || user?.role === "faculty") && (
+            <Link
+              href="/mentors/dashboard"
+              onClick={() => setMobileMenuOpen(false)}
+              className={`flex items-center gap-3 px-3 py-3 rounded-xl text-sm font-medium transition-colors ${pathname === "/mentors/dashboard"
+                  ? "text-[#10b981] bg-[#10b981]/10"
+                  : "text-gray-300 hover:text-[#10b981]"
+                }`}
+            >
+              <BookOpen className="h-4 w-4" />
+              Mentor Hub
+            </Link>
+          )}
           <a
             href={reportIssueUrl}
             target="_blank"
@@ -325,13 +330,13 @@ export default function Navbar() {
           >
             <AlertTriangle className="h-4 w-4" /> Report Issue
           </a>
-          {user && (
+          {mobileMenuOpen && user && (
             <button
               onClick={() => {
                 handleLogout();
                 setMobileMenuOpen(false);
               }}
-              className="w-full flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium text-red-400 hover:bg-red-500/10 transition-colors text-left"
+              className="w-full flex items-center gap-3 px-3 py-3 rounded-xl text-sm font-medium text-red-400 hover:bg-red-500/10 transition-colors text-left"
             >
               <LogOut className="h-4 w-4" />
               Sign Out
