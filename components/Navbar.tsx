@@ -7,13 +7,14 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
 import { MockDB, Profile } from "@/lib/db";
 import { isAdminUser } from "@/lib/admin";
-import { LogOut, Users, Search, Award, ShieldAlert, AlertTriangle, Menu, X as CloseIcon, LayoutDashboard, UserCircle, Bell, BookOpen } from "lucide-react";
+import { LogOut, Users, Search, Award, ShieldAlert, AlertTriangle, Menu, X as CloseIcon, LayoutDashboard, UserCircle, Bell, BookOpen, ChevronDown, MoreHorizontal } from "lucide-react";
 
 export default function Navbar() {
   const router = useRouter();
   const pathname = usePathname();
   const [user, setUser] = useState<Profile | null>(null);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [moreMenuOpen, setMoreMenuOpen] = useState(false);
 
   useEffect(() => {
     // Load user from Supabase Auth + profile table
@@ -40,6 +41,9 @@ export default function Navbar() {
     { name: "Team Finder", href: "/teams", icon: Users },
     { name: "Mentors", href: "/mentors", icon: BookOpen },
     { name: "My Profile", href: "/profile", icon: UserCircle },
+  ];
+
+  const moreItems = [
     { name: "Hall of Fame", href: "/hall-of-fame", icon: Award },
   ];
 
@@ -51,7 +55,7 @@ export default function Navbar() {
     : user?.kiet_email?.charAt(0).toUpperCase() ?? "U";
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b border-white/10 bg-[#080f25]/90 backdrop-blur-md">
+    <header className="sticky top-0 z-50 w-full border-b border-white/10 bg-[#080f25]/88 backdrop-blur-xl shadow-[0_12px_40px_rgba(0,0,0,0.18)]">
       {/* Tricolor SIH Accent Strip */}
       <div className="h-[4px] w-full flex">
         <div className="h-full w-1/3 bg-[#f97316]" title="Saffron"></div>
@@ -59,27 +63,27 @@ export default function Navbar() {
         <div className="h-full w-1/3 bg-[#10b981]" title="Green"></div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-8">
-        <div className="flex items-center justify-between gap-3 py-2 lg:py-2.5">
+      <div className="max-w-screen-2xl mx-auto px-3 sm:px-4 lg:px-6">
+        <div className="flex items-center justify-between gap-3 py-2.5 lg:py-3">
 
           {/* Logo brand */}
-          <div className="flex items-center gap-2 sm:gap-3 shrink-0">
-            <div className="flex items-center justify-center h-9 w-9 rounded-lg bg-gradient-to-tr from-[#f97316] to-[#002d62] text-white font-bold text-lg shadow-md border border-white/10 shrink-0">
+          <div className="flex items-center gap-2.5 sm:gap-3 shrink-0">
+            <div className="flex items-center justify-center h-10 w-10 rounded-2xl bg-gradient-to-tr from-[#f97316] via-[#ff9a4d] to-[#002d62] text-white font-black text-lg shadow-lg border border-white/10 shrink-0">
               SIH
             </div>
             <div className="min-w-0">
-              <span className="font-bold tracking-tight text-white block text-xs sm:text-sm xl:text-base leading-tight">
+              <span className="font-black tracking-tight text-white block text-xs sm:text-sm xl:text-base leading-tight">
                 KIET SIH <span className="text-[#f97316]">Team Finder</span>
               </span>
-              <span className="text-[10px] text-gray-400 block -mt-0.5 hidden sm:block">
+              <span className="text-[10px] text-gray-400 block -mt-0.5 hidden md:block">
                 Official Hackathon Portal
               </span>
             </div>
           </div>
 
           {/* Desktop Navigation Links */}
-          <nav className="hidden md:flex flex-1 items-center justify-center overflow-x-auto no-scrollbar px-2">
-            <div className="flex items-center gap-2 lg:gap-3 xl:gap-4 whitespace-nowrap no-scrollbar">
+          <nav className="hidden lg:flex flex-1 items-center justify-center px-2 min-w-0">
+            <div className="flex items-center gap-2.5 xl:gap-3 whitespace-nowrap min-w-0">
             {navItems.map((item) => {
               const Icon = item.icon;
               const isActive = pathname === item.href;
@@ -87,9 +91,9 @@ export default function Navbar() {
                 <Link
                   key={item.href}
                   href={item.href}
-                  className={`flex items-center gap-2 px-2.5 lg:px-3 py-2 rounded-lg text-xs lg:text-sm font-medium transition-colors shrink-0 whitespace-nowrap ${isActive
-                      ? "text-[#f97316] bg-[#f97316]/10"
-                      : "text-gray-300 hover:text-white hover:bg-white/5"
+                  className={`flex items-center gap-2 px-3 py-2.5 rounded-full text-xs xl:text-sm font-semibold transition-colors shrink-0 whitespace-nowrap border ${isActive
+                      ? "text-[#f97316] bg-[#f97316]/12 border-[#f97316]/15"
+                      : "text-gray-300 border-transparent hover:text-white hover:bg-white/5 hover:border-white/5"
                     }`}
                 >
                   <Icon className="h-4 w-4" />
@@ -100,9 +104,9 @@ export default function Navbar() {
             {isAdmin && (
               <Link
                 href="/admin"
-                className={`flex items-center gap-2 px-2.5 lg:px-3 py-2 rounded-lg text-xs lg:text-sm font-medium transition-colors shrink-0 whitespace-nowrap ${pathname === "/admin"
-                    ? "text-[#eab308] bg-[#eab308]/10"
-                    : "text-gray-300 hover:text-[#eab308] hover:bg-[#eab308]/5"
+                className={`flex items-center gap-2 px-3 py-2.5 rounded-full text-xs xl:text-sm font-semibold transition-colors shrink-0 whitespace-nowrap border ${pathname === "/admin"
+                    ? "text-[#eab308] bg-[#eab308]/12 border-[#eab308]/15"
+                    : "text-gray-300 border-transparent hover:text-[#eab308] hover:bg-[#eab308]/5 hover:border-[#eab308]/10"
                   }`}
               >
                 <ShieldAlert className="h-4 w-4" />
@@ -112,23 +116,88 @@ export default function Navbar() {
             {(isAdmin || user?.role === "faculty") && (
               <Link
                 href="/mentors/dashboard"
-                className={`flex items-center gap-2 px-2.5 lg:px-3 py-2 rounded-lg text-xs lg:text-sm font-medium transition-colors shrink-0 whitespace-nowrap ${pathname === "/mentors/dashboard"
-                    ? "text-[#10b981] bg-[#10b981]/10"
-                    : "text-gray-300 hover:text-[#10b981] hover:bg-[#10b981]/5"
+                className={`flex items-center gap-2 px-3 py-2.5 rounded-full text-xs xl:text-sm font-semibold transition-colors shrink-0 whitespace-nowrap border ${pathname === "/mentors/dashboard"
+                    ? "text-[#10b981] bg-[#10b981]/12 border-[#10b981]/15"
+                    : "text-gray-300 border-transparent hover:text-[#10b981] hover:bg-[#10b981]/5 hover:border-[#10b981]/10"
                   }`}
               >
                 <BookOpen className="h-4 w-4" />
                 Mentor Hub
               </Link>
             )}
-            <a
-              href={reportIssueUrl}
-              target="_blank"
-              rel="noreferrer"
-              className="flex items-center gap-1.5 px-2.5 lg:px-3 py-2 rounded-lg text-[11px] lg:text-xs font-semibold text-gray-400 hover:text-white transition-colors shrink-0 whitespace-nowrap"
-            >
-              <AlertTriangle className="h-3.5 w-3.5" /> Report Issue
-            </a>
+
+            <div className="relative shrink-0">
+              <button
+                type="button"
+                onClick={() => setMoreMenuOpen((open) => !open)}
+                className={`flex items-center gap-2 px-3 py-2.5 rounded-full text-xs xl:text-sm font-semibold transition-colors border ${moreMenuOpen
+                    ? "text-white bg-white/10 border-white/10"
+                    : "text-gray-300 border-transparent hover:text-white hover:bg-white/5 hover:border-white/5"
+                  }`}
+              >
+                <MoreHorizontal className="h-4 w-4" />
+                More
+                <ChevronDown className="h-3.5 w-3.5" />
+              </button>
+
+              {moreMenuOpen && (
+                <div className="absolute right-0 top-[calc(100%+0.5rem)] z-50 w-56 rounded-3xl border border-white/10 bg-[#0b1330]/98 shadow-2xl overflow-hidden backdrop-blur-xl">
+                  {moreItems.map((item) => {
+                    const Icon = item.icon;
+                    const isActive = pathname === item.href;
+                    return (
+                      <Link
+                        key={item.href}
+                        href={item.href}
+                        onClick={() => setMoreMenuOpen(false)}
+                        className={`flex items-center gap-3 px-4 py-3 text-sm transition-colors ${isActive
+                            ? "bg-[#f97316]/10 text-[#f97316]"
+                            : "text-gray-200 hover:bg-white/5 hover:text-white"
+                          }`}
+                      >
+                        <Icon className="h-4 w-4" />
+                        {item.name}
+                      </Link>
+                    );
+                  })}
+                  {isAdmin && (
+                    <Link
+                      href="/admin"
+                      onClick={() => setMoreMenuOpen(false)}
+                      className={`flex items-center gap-3 px-4 py-3 text-sm transition-colors ${pathname === "/admin"
+                          ? "bg-[#eab308]/10 text-[#eab308]"
+                          : "text-gray-200 hover:bg-white/5 hover:text-white"
+                        }`}
+                    >
+                      <ShieldAlert className="h-4 w-4" />
+                      Admin Panel
+                    </Link>
+                  )}
+                  {(isAdmin || user?.role === "faculty") && (
+                    <Link
+                      href="/mentors/dashboard"
+                      onClick={() => setMoreMenuOpen(false)}
+                      className={`flex items-center gap-3 px-4 py-3 text-sm transition-colors ${pathname === "/mentors/dashboard"
+                          ? "bg-[#10b981]/10 text-[#10b981]"
+                          : "text-gray-200 hover:bg-white/5 hover:text-white"
+                        }`}
+                    >
+                      <BookOpen className="h-4 w-4" />
+                      Mentor Hub
+                    </Link>
+                  )}
+                  <a
+                    href={reportIssueUrl}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="flex items-center gap-3 px-4 py-3 text-sm text-gray-200 hover:bg-white/5 hover:text-white transition-colors"
+                  >
+                    <AlertTriangle className="h-4 w-4" />
+                    Report Issue
+                  </a>
+                </div>
+              )}
+            </div>
             </div>
           </nav>
 
@@ -162,16 +231,17 @@ export default function Navbar() {
 
                 <button
                   onClick={handleLogout}
-                  className="hidden md:block p-2 text-gray-400 hover:text-red-400 rounded-md hover:bg-red-500/10 transition-colors shrink-0"
+                  className="hidden md:inline-flex items-center gap-2 px-3 py-2 rounded-full text-xs font-semibold text-gray-300 border border-white/5 hover:text-red-300 hover:bg-red-500/10 hover:border-red-500/20 transition-colors shrink-0"
                   title="Sign Out"
                 >
                   <LogOut className="h-4 w-4" />
+                  Sign Out
                 </button>
               </div>
             ) : (
               <Link
                 href="/"
-                className="px-4 py-1.5 rounded-md text-xs font-semibold bg-[#f97316] text-white hover:bg-[#ea580c] transition-colors"
+                className="px-4 py-2 rounded-full text-xs font-semibold bg-[#f97316] text-white hover:bg-[#ea580c] transition-colors"
               >
                 Login
               </Link>
@@ -180,7 +250,7 @@ export default function Navbar() {
             {/* Mobile menu toggle */}
             <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="md:hidden p-2 rounded-md text-gray-400 hover:text-white hover:bg-white/5 transition-colors shrink-0"
+              className="lg:hidden p-2 rounded-full text-gray-400 hover:text-white hover:bg-white/5 transition-colors shrink-0 border border-white/5"
             >
               {mobileMenuOpen ? <CloseIcon className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
             </button>
@@ -191,7 +261,7 @@ export default function Navbar() {
 
       {/* Mobile Menu Dropdown */}
       {mobileMenuOpen && (
-        <div className="md:hidden border-t border-white/10 bg-[#080f25] px-4 pt-3 pb-4 space-y-2 max-h-[70vh] overflow-y-auto">
+        <div className="lg:hidden border-t border-white/10 bg-[#080f25] px-4 pt-3 pb-4 space-y-2 max-h-[70vh] overflow-y-auto">
           {navItems.map((item) => {
             const Icon = item.icon;
             const isActive = pathname === item.href;
@@ -210,6 +280,17 @@ export default function Navbar() {
               </Link>
             );
           })}
+          <Link
+            href="/hall-of-fame"
+            onClick={() => setMobileMenuOpen(false)}
+            className={`flex items-center gap-3 px-3 py-3 rounded-xl text-sm font-medium transition-colors ${pathname === "/hall-of-fame"
+                ? "text-[#f97316] bg-[#f97316]/10"
+                : "text-gray-300 hover:text-white hover:bg-white/5"
+              }`}
+          >
+            <Award className="h-4 w-4" />
+            Hall of Fame
+          </Link>
           {isAdmin && (
             <Link
               href="/admin"
