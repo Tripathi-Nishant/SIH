@@ -458,7 +458,7 @@ export default function DashboardPage() {
                 <div className="h-64 bg-white/5 rounded-2xl border border-white/5"></div>
               </div>
             ) : team ? (
-              <div className="glass rounded-2xl border border-white/10 overflow-hidden">
+              <div className="surface-card rounded-2xl overflow-hidden">
                 <div className="p-6 bg-white/5 border-b border-white/10 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                   <div>
                     <span className="text-[10px] font-bold text-[#f97316] uppercase tracking-wider">My Active Team</span>
@@ -617,7 +617,7 @@ export default function DashboardPage() {
                 </div>
 
                 {recommendedTeams.length === 0 ? (
-                  <div className="glass p-8 rounded-2xl border border-white/10 text-center text-gray-400">
+                  <div className="surface-card p-8 rounded-2xl text-center text-gray-400">
                     <Info className="h-8 w-8 text-gray-500 mx-auto mb-2" />
                     <p className="text-sm font-semibold">No direct matches currently.</p>
                     <p className="text-xs text-gray-500 mt-1">Go to the Browse section to view all public open squads.</p>
@@ -625,7 +625,7 @@ export default function DashboardPage() {
                 ) : (
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     {recommendedTeams.map((t) => (
-                      <div key={t.id} className="glass p-5 rounded-2xl border border-white/10 hover:border-[#f97316]/50 transition-all flex flex-col justify-between">
+                      <div key={t.id} className="surface-card surface-card-hover p-5 rounded-2xl transition-all flex flex-col justify-between">
                         <div>
                           <span className="text-[9px] font-bold bg-[#f97316]/10 text-[#f97316] px-1.5 py-0.5 rounded block w-fit">MATCHED SQUAD</span>
                           <h4 className="text-base font-bold text-white mt-2">{t.name}</h4>
@@ -669,7 +669,7 @@ export default function DashboardPage() {
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       {compositionMatchTeams.slice(0, 6).map((t) => (
-                        <div key={t.id} className="glass p-5 rounded-2xl border border-amber-500/20 hover:border-amber-400/50 transition-all flex flex-col justify-between">
+                        <div key={t.id} className="surface-card surface-card-hover p-5 rounded-2xl transition-all flex flex-col justify-between">
                           <div>
                             <div className="flex items-center gap-2">
                               <span className="text-[9px] font-bold bg-amber-500/10 text-amber-400 px-1.5 py-0.5 rounded">SKILL + COMPOSITION MATCH</span>
@@ -716,7 +716,7 @@ export default function DashboardPage() {
               </div>
             ) : (
               <>
-                <div className="glass p-6 rounded-2xl border border-white/10 space-y-4">
+                <div className="surface-card rounded-2xl p-6 space-y-4">
               <div className="flex items-center gap-3">
                 <div className="h-10 w-10 rounded-full bg-[#f97316]/20 border border-[#f97316]/40 flex items-center justify-center text-[#f97316] font-bold">
                   {user.name ? user.name.charAt(0) : "S"}
@@ -747,7 +747,7 @@ export default function DashboardPage() {
               </div>
             </div>
 
-            <div className="glass rounded-2xl border border-white/10 overflow-hidden">
+            <div className="surface-card rounded-2xl overflow-hidden">
               <div className="p-4 bg-white/5 border-b border-white/10 flex justify-between items-center">
                 <h4 className="text-xs font-bold text-white uppercase tracking-wider">Inbox Notifications</h4>
                 <span className="text-[9px] font-bold bg-[#f97316]/20 text-[#f97316] px-1.5 py-0.5 rounded">
@@ -844,7 +844,7 @@ export default function DashboardPage() {
 
       {showCreateModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm">
-          <div className="glass w-full max-w-lg rounded-2xl border border-white/15 p-6 relative">
+          <div className="surface-card w-full max-w-lg rounded-2xl p-6 relative">
             <h3 className="text-lg font-bold text-white mb-4">Create New SIH Team</h3>
             
             <form onSubmit={handleCreateTeam} className="space-y-4">
@@ -948,7 +948,7 @@ export default function DashboardPage() {
 
       {showInviteModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm">
-          <div className="glass w-full max-w-md rounded-2xl border border-white/15 p-6 relative">
+          <div className="surface-card w-full max-w-md rounded-2xl p-6 relative">
             <h3 className="text-lg font-bold text-white mb-2">Send Team Invitation</h3>
             <p className="text-xs text-gray-400 mb-4">Invite students directly by selecting their profile name.</p>
 
@@ -1079,7 +1079,7 @@ export default function DashboardPage() {
 
       {ratingTeammate && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-sm">
-          <div className="glass w-full max-w-md rounded-2xl border border-white/15 p-6 relative">
+          <div className="surface-card w-full max-w-md rounded-2xl p-6 relative">
             <h3 className="text-lg font-bold text-white mb-1">Rate Teammate</h3>
             <p className="text-xs text-gray-400 mb-4">Provide anonymous performance scores for {ratingTeammate.name || ratingTeammate.kiet_email}.</p>
 
@@ -1165,7 +1165,7 @@ export default function DashboardPage() {
 
       {reportModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm">
-          <div className="glass w-full max-w-md rounded-2xl border border-white/15 p-6 relative">
+          <div className="surface-card w-full max-w-md rounded-2xl p-6 relative">
             <h3 className="text-lg font-bold text-white mb-2 flex items-center gap-2">
               <ShieldAlert className="h-5 w-5 text-red-500" /> Report or Block User
             </h3>

@@ -38,6 +38,18 @@ body {
   box-shadow: 0 20px 70px rgba(0, 0, 0, 0.28);
 }
 
+.surface-card {
+  background: rgba(10, 16, 35, 0.92);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.14);
+}
+
+.surface-card-hover:hover {
+  background: rgba(12, 18, 40, 0.98);
+  border-color: rgba(255, 255, 255, 0.13);
+  box-shadow: 0 14px 34px rgba(0, 0, 0, 0.18);
+}
+
 .no-scrollbar {
   -ms-overflow-style: none;
   scrollbar-width: none;

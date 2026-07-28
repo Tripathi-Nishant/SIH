@@ -138,22 +138,22 @@ export default function MentorsPageClient() {
         )}
 
         <section className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div className="glass glass-hover soft-border rounded-2xl p-5">
+          <div className="surface-card surface-card-hover soft-border rounded-2xl p-5">
             <span className="text-[10px] uppercase tracking-wider text-gray-400 font-bold">Mentors</span>
             <div className="text-3xl font-black text-white mt-2">{mentors.length}</div>
           </div>
-          <div className="glass glass-hover soft-border rounded-2xl p-5">
+          <div className="surface-card surface-card-hover soft-border rounded-2xl p-5">
             <span className="text-[10px] uppercase tracking-wider text-gray-400 font-bold">Active Mentor Assignments</span>
             <div className="text-3xl font-black text-[#10b981] mt-2">{allAssignments.filter((assignment) => assignment.active !== false).length}</div>
           </div>
-          <div className="glass glass-hover soft-border rounded-2xl p-5">
+          <div className="surface-card surface-card-hover soft-border rounded-2xl p-5">
             <span className="text-[10px] uppercase tracking-wider text-gray-400 font-bold">Ready to Request</span>
             <div className="text-3xl font-black text-[#f97316] mt-2">{team ? 1 : 0}</div>
           </div>
         </section>
 
         <section className="grid grid-cols-1 lg:grid-cols-[0.65fr_1.35fr] gap-6">
-          <div className="glass glass-hover soft-border rounded-2xl p-5 space-y-4 h-fit">
+          <div className="surface-card surface-card-hover soft-border rounded-2xl p-5 space-y-4 h-fit">
             <h2 className="text-lg font-bold text-white flex items-center gap-2">
               <Search className="h-4 w-4 text-[#f97316]" />
               Filters
@@ -198,7 +198,7 @@ export default function MentorsPageClient() {
                   const requested = selectedMentor?.id === mentor.id;
 
                   return (
-                    <div key={mentor.id} className="glass glass-hover soft-border rounded-2xl p-5 flex flex-col gap-4">
+                    <div key={mentor.id} className="surface-card surface-card-hover soft-border rounded-2xl p-5 flex flex-col gap-4">
                       <div className="flex items-start justify-between gap-3">
                         <div>
                           <span className="text-[10px] uppercase tracking-wider text-gray-400 font-bold">
@@ -284,7 +284,7 @@ export default function MentorsPageClient() {
 
       {selectedMentor && team && canRequestMentor && (
         <div className="fixed inset-0 z-50 bg-black/75 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="w-full max-w-lg glass rounded-2xl border border-white/10 p-6">
+          <div className="w-full max-w-lg surface-card rounded-2xl p-6">
             <div className="flex items-start justify-between gap-4 mb-5">
               <div>
                 <h3 className="text-lg font-bold text-white">Request Mentor</h3>

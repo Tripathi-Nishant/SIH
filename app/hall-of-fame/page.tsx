@@ -208,7 +208,7 @@ export default function HallOfFamePage() {
             ) : (
               <div className="space-y-4">
                 {filteredPpts.map((ppt) => (
-                  <div key={ppt.id} className="glass glass-hover soft-border p-5 rounded-2xl flex flex-col justify-between gap-4">
+                  <div key={ppt.id} className="surface-card surface-card-hover soft-border p-5 rounded-2xl flex flex-col justify-between gap-4">
                     <div className="flex justify-between items-start">
                       <div>
                         <span className="text-[10px] font-bold text-gray-400 block tracking-wider uppercase">
@@ -274,7 +274,7 @@ export default function HallOfFamePage() {
                 </div>
               ) : (
                 sortedTips.map((tip) => (
-                <div key={tip.id} className="glass glass-hover soft-border p-5 rounded-2xl flex flex-col justify-between gap-3 text-xs">
+                <div key={tip.id} className="surface-card surface-card-hover soft-border p-5 rounded-2xl flex flex-col justify-between gap-3 text-xs">
                   <div>
                     <span className="px-2 py-0.5 rounded bg-yellow-500/10 text-yellow-300 border border-yellow-500/20 text-[9px] font-bold uppercase tracking-wider block w-fit">
                       {tip.category}
@@ -319,7 +319,7 @@ export default function HallOfFamePage() {
       {/* SHARE PPT MODAL */}
       {showPptModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm">
-          <div className="glass w-full max-w-md rounded-2xl border border-white/15 p-6 relative">
+          <div className="surface-card w-full max-w-md rounded-2xl p-6 relative">
             <h3 className="text-lg font-bold text-white mb-4">Share Past Finalist Presentation Deck</h3>
 
             <form onSubmit={handleAddPpt} className="space-y-4">
@@ -416,7 +416,7 @@ export default function HallOfFamePage() {
       {/* SHARE TIP MODAL */}
       {showTipModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm">
-          <div className="glass w-full max-w-md rounded-2xl border border-white/15 p-6 relative">
+          <div className="surface-card w-full max-w-md rounded-2xl p-6 relative">
             <h3 className="text-lg font-bold text-white mb-4">Share Finalist Matching Advice Tip</h3>
 
             <form onSubmit={handleAddTip} className="space-y-4">

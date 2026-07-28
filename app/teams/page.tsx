@@ -116,15 +116,15 @@ export default function TeamFinderPage() {
         </section>
 
         <section className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-          <div className="glass glass-hover soft-border rounded-2xl p-5">
+          <div className="surface-card surface-card-hover soft-border rounded-2xl p-5">
             <span className="text-[10px] uppercase tracking-wider text-gray-400 font-bold">Open Teams</span>
             <div className="text-3xl font-black text-white mt-2">{teams.filter((team) => team.status === "open").length}</div>
           </div>
-          <div className="glass glass-hover soft-border rounded-2xl p-5">
+          <div className="surface-card surface-card-hover soft-border rounded-2xl p-5">
             <span className="text-[10px] uppercase tracking-wider text-gray-400 font-bold">Locked Teams</span>
             <div className="text-3xl font-black text-[#10b981] mt-2">{teams.filter((team) => team.status === "locked").length}</div>
           </div>
-          <div className="glass glass-hover soft-border rounded-2xl p-5">
+          <div className="surface-card surface-card-hover soft-border rounded-2xl p-5">
             <span className="text-[10px] uppercase tracking-wider text-gray-400 font-bold">Matching Hint</span>
             <div className="text-sm text-gray-300 mt-2">
               We rank teams by how many of your skills match their required slots.
@@ -158,7 +158,7 @@ export default function TeamFinderPage() {
                 const saved = user ? isTeamSaved(user.id, team.id) : false;
 
                 return (
-                  <div key={team.id} className="glass glass-hover soft-border rounded-2xl p-5 flex flex-col gap-4">
+                  <div key={team.id} className="surface-card surface-card-hover soft-border rounded-2xl p-5 flex flex-col gap-4">
                     <div className="flex items-start justify-between gap-3">
                       <div>
                         <span className="text-[10px] uppercase tracking-wider text-gray-400 font-bold">
