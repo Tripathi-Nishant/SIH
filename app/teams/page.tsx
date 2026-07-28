@@ -78,11 +78,11 @@ export default function TeamFinderPage() {
     .map((item) => item.team);
 
   return (
-    <div className="min-h-screen bg-[#060a17] flex flex-col">
+    <div className="min-h-screen bg-[#060a17] flex flex-col page-shell">
       <Navbar />
 
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
-        <section className="glass rounded-3xl border border-white/10 p-6 md:p-8 overflow-hidden relative">
+        <section className="hero-panel soft-border rounded-3xl p-6 md:p-8 overflow-hidden relative">
           <div className="absolute inset-0 bg-gradient-to-br from-[#f97316]/10 via-transparent to-[#10b981]/10 pointer-events-none" />
           <div className="relative">
             <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/5 border border-white/10 text-[10px] font-bold uppercase tracking-[0.22em] text-gray-300">
@@ -116,15 +116,15 @@ export default function TeamFinderPage() {
         </section>
 
         <section className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-          <div className="glass rounded-2xl border border-white/10 p-5">
+          <div className="glass glass-hover soft-border rounded-2xl p-5">
             <span className="text-[10px] uppercase tracking-wider text-gray-400 font-bold">Open Teams</span>
             <div className="text-3xl font-black text-white mt-2">{teams.filter((team) => team.status === "open").length}</div>
           </div>
-          <div className="glass rounded-2xl border border-white/10 p-5">
+          <div className="glass glass-hover soft-border rounded-2xl p-5">
             <span className="text-[10px] uppercase tracking-wider text-gray-400 font-bold">Locked Teams</span>
             <div className="text-3xl font-black text-[#10b981] mt-2">{teams.filter((team) => team.status === "locked").length}</div>
           </div>
-          <div className="glass rounded-2xl border border-white/10 p-5">
+          <div className="glass glass-hover soft-border rounded-2xl p-5">
             <span className="text-[10px] uppercase tracking-wider text-gray-400 font-bold">Matching Hint</span>
             <div className="text-sm text-gray-300 mt-2">
               We rank teams by how many of your skills match their required slots.
@@ -158,7 +158,7 @@ export default function TeamFinderPage() {
                 const saved = user ? isTeamSaved(user.id, team.id) : false;
 
                 return (
-                  <div key={team.id} className="glass rounded-2xl border border-white/10 p-5 flex flex-col gap-4">
+                  <div key={team.id} className="glass glass-hover soft-border rounded-2xl p-5 flex flex-col gap-4">
                     <div className="flex items-start justify-between gap-3">
                       <div>
                         <span className="text-[10px] uppercase tracking-wider text-gray-400 font-bold">

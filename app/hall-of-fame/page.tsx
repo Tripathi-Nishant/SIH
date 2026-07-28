@@ -142,12 +142,12 @@ export default function HallOfFamePage() {
   });
 
   return (
-    <div className="min-h-screen bg-[#060a17] flex flex-col">
+    <div className="min-h-screen bg-[#060a17] flex flex-col page-shell">
       <Navbar />
 
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
         
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+        <div className="hero-panel soft-border rounded-3xl p-5 md:p-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
           <div>
             <h2 className="text-2xl font-extrabold text-white">Hall of Fame</h2>
             <p className="text-xs text-gray-400 mt-1">Archive of past KIET hackathon finalist decks, slide templates, and tips.</p>
@@ -208,11 +208,11 @@ export default function HallOfFamePage() {
             ) : (
               <div className="space-y-4">
                 {filteredPpts.map((ppt) => (
-                  <div key={ppt.id} className="glass p-5 rounded-2xl border border-white/10 flex flex-col justify-between gap-4">
+                  <div key={ppt.id} className="glass glass-hover soft-border p-5 rounded-2xl flex flex-col justify-between gap-4">
                     <div className="flex justify-between items-start">
                       <div>
                         <span className="text-[10px] font-bold text-gray-400 block tracking-wider uppercase">
-                          SIH {ppt.year} • {ppt.track} Track
+                          SIH {ppt.year} · {ppt.track} Track
                         </span>
                         <h4 className="text-base font-bold text-white mt-1">{ppt.team_name}</h4>
                         <p className="text-xs text-[#f97316] font-semibold mt-0.5">{ppt.ps_title}</p>
@@ -274,7 +274,7 @@ export default function HallOfFamePage() {
                 </div>
               ) : (
                 sortedTips.map((tip) => (
-                <div key={tip.id} className="p-5 rounded-2xl bg-white/5 border border-white/10 flex flex-col justify-between gap-3 text-xs">
+                <div key={tip.id} className="glass glass-hover soft-border p-5 rounded-2xl flex flex-col justify-between gap-3 text-xs">
                   <div>
                     <span className="px-2 py-0.5 rounded bg-yellow-500/10 text-yellow-300 border border-yellow-500/20 text-[9px] font-bold uppercase tracking-wider block w-fit">
                       {tip.category}

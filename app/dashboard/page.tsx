@@ -354,15 +354,15 @@ export default function DashboardPage() {
   const isLeader = team && team.leader_id === user.id;
 
   return (
-    <div className="min-h-screen bg-[#060a17] flex flex-col">
+    <div className="min-h-screen bg-[#060a17] flex flex-col page-shell">
       <Navbar />
 
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
         
         {showWelcome && user.profile_completeness === 100 && (
-          <div className="p-4 rounded-xl bg-blue-900/20 border border-blue-500/30 flex items-center justify-between text-blue-200">
+          <div className="hero-panel soft-border rounded-2xl p-4 flex items-center justify-between text-blue-100">
             <div className="flex items-center gap-3">
-              <div className="h-8 w-8 rounded-full bg-blue-500/20 flex items-center justify-center">
+              <div className="h-9 w-9 rounded-full bg-blue-500/20 border border-blue-400/20 flex items-center justify-center">
                 <Info className="h-4 w-4 text-blue-400" />
               </div>
               <div>
@@ -377,7 +377,7 @@ export default function DashboardPage() {
         )}
 
         {seasonConcluded && unratedTeammates.length > 0 && (
-          <div className="p-4 rounded-xl bg-purple-950/40 border border-purple-500/20 text-purple-200 text-sm space-y-3">
+          <div className="hero-panel soft-border rounded-2xl p-4 text-purple-100 text-sm space-y-3">
             <div className="flex items-center gap-3">
               <Award className="h-5 w-5 text-purple-400" />
               <div>
@@ -399,7 +399,7 @@ export default function DashboardPage() {
         )}
 
         {user.profile_completeness < 100 && (
-          <div className="p-4 rounded-xl bg-orange-950/40 border border-orange-500/20 text-orange-200 text-sm flex items-center justify-between">
+          <div className="hero-panel soft-border rounded-2xl p-4 text-orange-100 text-sm flex items-center justify-between">
             <div className="flex items-center gap-3">
               <AlertTriangle className="h-5 w-5 text-[#f97316]" />
               <div>
@@ -415,7 +415,7 @@ export default function DashboardPage() {
           </div>
         )}
 
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b border-white/5 pb-6">
+        <div className="hero-panel soft-border rounded-3xl p-5 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
           <div>
             <h2 className="text-2xl font-extrabold text-white">Student Workspace</h2>
             <p className="text-xs text-gray-400 mt-1">SIH season: active matching engine</p>
@@ -425,7 +425,7 @@ export default function DashboardPage() {
             {!team ? (
               <button
                 onClick={() => setShowCreateModal(true)}
-                className="px-4 py-2 bg-[#f97316] hover:bg-[#ea580c] text-white text-xs font-semibold rounded-lg flex items-center gap-1.5 transition-colors shadow-md"
+                className="px-4 py-2 bg-[#f97316] hover:bg-[#ea580c] text-white text-xs font-semibold rounded-xl flex items-center gap-1.5 transition-colors shadow-md"
               >
                 <PlusCircle className="h-4 w-4" /> Create SIH Team
               </button>
@@ -433,13 +433,13 @@ export default function DashboardPage() {
               <>
                 <button
                   onClick={() => setShowCardModal(true)}
-                  className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold rounded-lg flex items-center gap-1.5 transition-colors shadow-md"
+                  className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold rounded-xl flex items-center gap-1.5 transition-colors shadow-md"
                 >
                   <FileText className="h-4 w-4" /> Export Team Card
                 </button>
                 <button
                   onClick={handleLeaveTeam}
-                  className="px-4 py-2 bg-red-650 hover:bg-red-700 text-white text-xs font-semibold rounded-lg flex items-center gap-1.5 transition-colors shadow-md"
+                  className="px-4 py-2 bg-red-650 hover:bg-red-700 text-white text-xs font-semibold rounded-xl flex items-center gap-1.5 transition-colors shadow-md"
                 >
                   <Trash2 className="h-4 w-4" /> {isLeader ? "Disband Team" : "Leave Team"}
                 </button>
@@ -556,7 +556,7 @@ export default function DashboardPage() {
                                   </span>
                                 )}
                               </div>
-                              <span className="block text-[10px] text-gray-400">{member.branch} • Year {member.year}</span>
+                              <span className="block text-[10px] text-gray-400">{member.branch} · Year {member.year}</span>
                             </div>
                           </div>
                           <div className="text-right">
@@ -584,7 +584,7 @@ export default function DashboardPage() {
                             <div key={student.id} className="p-3 bg-white/5 border border-white/5 rounded-xl flex items-center justify-between text-xs">
                               <div>
                                 <span className="font-bold text-white block">{student.name}</span>
-                                <span className="text-[10px] text-gray-400 block">{student.branch} • Year {student.year}</span>
+                                <span className="text-[10px] text-gray-400 block">{student.branch} · Year {student.year}</span>
                                 <span className="text-[10px] text-[#10b981] font-medium block mt-0.5 truncate max-w-[150px]">
                                   Skills: {getUserSkillsString(student.id)}
                                 </span>
