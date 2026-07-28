@@ -101,8 +101,8 @@ export default function MentorsPageClient() {
                 <GraduationCap className="h-3.5 w-3.5 text-[#10b981]" />
                 Mentor Directory
               </span>
-              <h1 className="text-4xl md:text-5xl font-black text-white mt-4">Find faculty mentors for your SIH team.</h1>
-              <p className="text-sm md:text-base text-gray-400 mt-3 max-w-2xl">
+              <h1 className="page-title mt-4">Find faculty mentors for your SIH team.</h1>
+              <p className="page-subtitle">
                 Browse professors and teachers by department, expertise, and availability. Request mentorship directly from your team flow.
               </p>
             </div>
@@ -120,7 +120,7 @@ export default function MentorsPageClient() {
         </section>
 
         {team && (
-          <section className="rounded-2xl border border-[#10b981]/20 bg-[#10b981]/5 p-5 text-sm text-green-100 flex items-center justify-between gap-4 flex-wrap">
+          <section className="surface-card rounded-2xl p-5 text-sm text-green-100 flex items-center justify-between gap-4 flex-wrap">
             <div>
               <div className="font-bold text-white">Requesting mentor for: {team.name}</div>
               <div className="text-green-100/80 mt-1">You can pick a mentor below and send a request on behalf of your team.</div>
@@ -154,7 +154,7 @@ export default function MentorsPageClient() {
 
         <section className="grid grid-cols-1 lg:grid-cols-[0.65fr_1.35fr] gap-6">
           <div className="surface-card surface-card-hover soft-border rounded-2xl p-5 space-y-4 h-fit">
-            <h2 className="text-lg font-bold text-white flex items-center gap-2">
+            <h2 className="section-title flex items-center gap-2">
               <Search className="h-4 w-4 text-[#f97316]" />
               Filters
             </h2>
@@ -187,7 +187,7 @@ export default function MentorsPageClient() {
                 ))}
               </div>
             ) : filteredMentors.length === 0 ? (
-              <div className="rounded-2xl border border-dashed border-white/10 bg-white/5 p-8 text-center text-gray-400">
+              <div className="empty-state rounded-2xl p-8 text-center">
                 No mentors matched your filters.
               </div>
             ) : (
@@ -248,7 +248,7 @@ export default function MentorsPageClient() {
                             href={mentor.meeting_link}
                             target="_blank"
                             rel="noreferrer"
-                            className="inline-flex items-center gap-2 px-3 py-2 rounded-lg bg-white/5 border border-white/10 text-xs font-semibold text-gray-200 hover:bg-white/10"
+                            className="secondary-btn h-9 px-3 text-xs"
                           >
                             <MessageCircle className="h-3.5 w-3.5" />
                             Meet Link
@@ -260,7 +260,7 @@ export default function MentorsPageClient() {
                               setSelectedMentor(mentor);
                               setNote(`We would love to have you mentor ${team.name}.`);
                             }}
-                            className="inline-flex items-center gap-2 px-3 py-2 rounded-lg bg-[#f97316] text-white text-xs font-semibold hover:bg-[#ea580c]"
+                            className="primary-btn h-9 px-3 text-xs"
                           >
                             <PlusCircle className="h-3.5 w-3.5" />
                             Request Mentor

@@ -360,7 +360,7 @@ export default function DashboardPage() {
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
         
         {showWelcome && user.profile_completeness === 100 && (
-          <div className="hero-panel soft-border rounded-2xl p-4 flex items-center justify-between text-blue-100">
+          <div className="surface-card rounded-2xl p-4 flex items-center justify-between text-blue-100">
             <div className="flex items-center gap-3">
               <div className="h-9 w-9 rounded-full bg-blue-500/20 border border-blue-400/20 flex items-center justify-center">
                 <Info className="h-4 w-4 text-blue-400" />
@@ -377,7 +377,7 @@ export default function DashboardPage() {
         )}
 
         {seasonConcluded && unratedTeammates.length > 0 && (
-          <div className="hero-panel soft-border rounded-2xl p-4 text-purple-100 text-sm space-y-3">
+          <div className="surface-card rounded-2xl p-4 text-purple-100 text-sm space-y-3">
             <div className="flex items-center gap-3">
               <Award className="h-5 w-5 text-purple-400" />
               <div>
@@ -389,7 +389,7 @@ export default function DashboardPage() {
                 <button
                   key={t.id}
                   onClick={() => setRatingTeammate(t)}
-                  className="px-3 py-1.5 bg-purple-600 hover:bg-purple-700 text-white rounded-lg text-xs font-semibold transition-colors"
+                className="secondary-btn h-8 px-3 py-0 text-xs text-purple-100 border-purple-500/20 bg-purple-500/10 hover:bg-purple-500/15"
                 >
                   Rate {t.name || t.kiet_email}
                 </button>
@@ -399,7 +399,7 @@ export default function DashboardPage() {
         )}
 
         {user.profile_completeness < 100 && (
-          <div className="hero-panel soft-border rounded-2xl p-4 text-orange-100 text-sm flex items-center justify-between">
+          <div className="surface-card rounded-2xl p-4 text-orange-100 text-sm flex items-center justify-between">
             <div className="flex items-center gap-3">
               <AlertTriangle className="h-5 w-5 text-[#f97316]" />
               <div>
@@ -408,24 +408,24 @@ export default function DashboardPage() {
             </div>
             <button
               onClick={() => router.push("/onboard")}
-              className="px-3 py-1.5 bg-[#f97316] text-white hover:bg-[#ea580c] transition-colors rounded-lg font-semibold text-xs"
+              className="primary-btn h-8 px-3 text-xs"
             >
               Complete Onboarding
             </button>
           </div>
         )}
 
-        <div className="hero-panel soft-border rounded-3xl p-5 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+        <div className="surface-card rounded-3xl p-5 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
           <div>
-            <h2 className="text-2xl font-extrabold text-white">Student Workspace</h2>
-            <p className="text-xs text-gray-400 mt-1">SIH season: active matching engine</p>
+            <h2 className="page-title text-[2rem] md:text-[2.35rem]">Student Workspace</h2>
+            <p className="page-subtitle text-sm mt-2 max-w-xl">SIH season: active matching engine</p>
           </div>
 
-          <div className="flex gap-3">
+          <div className="flex flex-wrap gap-3">
             {!team ? (
               <button
                 onClick={() => setShowCreateModal(true)}
-                className="px-4 py-2 bg-[#f97316] hover:bg-[#ea580c] text-white text-xs font-semibold rounded-xl flex items-center gap-1.5 transition-colors shadow-md"
+                className="primary-btn"
               >
                 <PlusCircle className="h-4 w-4" /> Create SIH Team
               </button>
@@ -433,13 +433,13 @@ export default function DashboardPage() {
               <>
                 <button
                   onClick={() => setShowCardModal(true)}
-                  className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold rounded-xl flex items-center gap-1.5 transition-colors shadow-md"
+                  className="secondary-btn"
                 >
                   <FileText className="h-4 w-4" /> Export Team Card
                 </button>
                 <button
                   onClick={handleLeaveTeam}
-                  className="px-4 py-2 bg-red-650 hover:bg-red-700 text-white text-xs font-semibold rounded-xl flex items-center gap-1.5 transition-colors shadow-md"
+                  className="secondary-btn !border-red-500/20 !text-red-200 !bg-red-500/5 hover:!bg-red-500/10"
                 >
                   <Trash2 className="h-4 w-4" /> {isLeader ? "Disband Team" : "Leave Team"}
                 </button>
@@ -454,16 +454,16 @@ export default function DashboardPage() {
             
             {loading ? (
               <div className="space-y-4 animate-pulse">
-                <div className="h-32 bg-white/5 rounded-2xl border border-white/5"></div>
-                <div className="h-64 bg-white/5 rounded-2xl border border-white/5"></div>
+                <div className="h-32 rounded-2xl border border-white/5 bg-white/5"></div>
+                <div className="h-64 rounded-2xl border border-white/5 bg-white/5"></div>
               </div>
             ) : team ? (
               <div className="surface-card rounded-2xl overflow-hidden">
                 <div className="p-6 bg-white/5 border-b border-white/10 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                   <div>
-                    <span className="text-[10px] font-bold text-[#f97316] uppercase tracking-wider">My Active Team</span>
-                    <h3 className="text-xl font-bold text-white mt-0.5">{team.name}</h3>
-                    <p className="text-xs text-gray-400 mt-1">
+                    <span className="section-kicker">My Active Team</span>
+                    <h3 className="section-title mt-3">{team.name}</h3>
+                    <p className="section-subtitle mt-2">
                       Problem Statement: <span className="text-gray-300 font-medium">{team.problem_statement_title}</span>
                     </p>
                   </div>
@@ -476,7 +476,7 @@ export default function DashboardPage() {
 
                 <div className="p-6 space-y-6">
                   <div>
-                    <h4 className="text-xs font-bold text-gray-300 uppercase tracking-wider mb-3">Required Skill Slots (Gap Analysis)</h4>
+                    <h4 className="section-title text-sm mb-3">Required Skill Slots</h4>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                       {team.required_skills_json.map((slot, idx) => {
                         const filled = teamMembers.some(m => {
@@ -506,7 +506,7 @@ export default function DashboardPage() {
                       })}
                     </div>
 
-                    {/* ── Composition Requirement Slot (≥1 female member) ────── */}
+                    {/* Composition Requirement Slot (>=1 female member) */}
                     {(() => {
                       const hasFemale = teamMembers.some(m => m.gender === 'female');
                       return (
@@ -539,7 +539,7 @@ export default function DashboardPage() {
                   </div>
 
                   <div>
-                    <h4 className="text-xs font-bold text-gray-300 uppercase tracking-wider mb-3">Team Squad Members ({teamMembers.length} of 6)</h4>
+                    <h4 className="section-title text-sm mb-3">Team Squad Members ({teamMembers.length} of 6)</h4>
                     <div className="space-y-3">
                       {teamMembers.map((member) => (
                         <div key={member.id} className="flex items-center justify-between p-3.5 rounded-xl bg-white/5 border border-white/5">
@@ -570,7 +570,7 @@ export default function DashboardPage() {
                   {isLeader && (
                     <div className="pt-4 border-t border-white/5 space-y-3">
                       <div className="flex justify-between items-center">
-                        <h4 className="text-xs font-bold text-[#f97316] uppercase tracking-wider">Matching Unmatched Students</h4>
+                        <h4 className="section-kicker">Matching Unmatched Students</h4>
                         <button onClick={() => setShowInviteModal(true)} className="text-[10px] font-semibold text-blue-400 hover:underline">
                           Manual Invite
                         </button>
@@ -608,16 +608,16 @@ export default function DashboardPage() {
                 </div>
               </div>
             ) : (
-              <div className="space-y-6">
+                    <div className="space-y-6">
                 <div>
-                  <h3 className="text-lg font-bold text-white flex items-center gap-2">
+                  <h3 className="section-title flex items-center gap-2">
                     <Users className="h-5 w-5 text-[#f97316]" /> Recommended Hackathon Teams
                   </h3>
-                  <p className="text-xs text-gray-400 mt-1">Based on matches between your profile skills and active squad vacancy requirements.</p>
+                  <p className="section-subtitle mt-1">Based on matches between your profile skills and active squad vacancy requirements.</p>
                 </div>
 
                 {recommendedTeams.length === 0 ? (
-                  <div className="surface-card p-8 rounded-2xl text-center text-gray-400">
+                  <div className="empty-state p-8 rounded-2xl text-center">
                     <Info className="h-8 w-8 text-gray-500 mx-auto mb-2" />
                     <p className="text-sm font-semibold">No direct matches currently.</p>
                     <p className="text-xs text-gray-500 mt-1">Go to the Browse section to view all public open squads.</p>
@@ -659,11 +659,11 @@ export default function DashboardPage() {
                 {compositionMatchTeams.length > 0 && (
                   <div className="mt-6 space-y-4">
                     <div>
-                      <h3 className="text-lg font-bold text-white flex items-center gap-2">
+                      <h3 className="section-title flex items-center gap-2">
                         <Star className="h-5 w-5 text-amber-400" /> Teams That Need Your Skills + Composition
                       </h3>
-                      <p className="text-xs text-gray-400 mt-1">
-                        These open teams match your skills <span className="text-amber-300">and</span> still need to fulfil the mandatory female-member requirement. Your skills are the primary match — you are never just filling a slot.
+                      <p className="section-subtitle mt-1">
+                        These open teams match your skills <span className="text-amber-300">and</span> still need to fulfil the mandatory female-member requirement. Your skills are the primary match - you are never just filling a slot.
                       </p>
                     </div>
 
@@ -749,7 +749,7 @@ export default function DashboardPage() {
 
             <div className="surface-card rounded-2xl overflow-hidden">
               <div className="p-4 bg-white/5 border-b border-white/10 flex justify-between items-center">
-                <h4 className="text-xs font-bold text-white uppercase tracking-wider">Inbox Notifications</h4>
+                <h4 className="section-kicker">Inbox Notifications</h4>
                 <span className="text-[9px] font-bold bg-[#f97316]/20 text-[#f97316] px-1.5 py-0.5 rounded">
                   {requests.filter(r => r.status === 'pending').length} Action Needed
                 </span>
@@ -1034,7 +1034,7 @@ export default function DashboardPage() {
                 <span className="block text-[9px] text-gray-400 uppercase font-bold tracking-wider mb-2">Team Roster ({teamMembers.length} Members)</span>
                 <div className="grid grid-cols-2 gap-3">
                   {teamMembers.map((member, idx) => (
-                    <div key={member.id} className="p-2.5 rounded-lg bg-white/5 border border-white/5 flex flex-col justify-between">
+                    <div key={member.id} className="surface-card rounded-2xl p-2.5 flex flex-col justify-between">
                       <div>
                         <span className="font-bold text-white text-xs block truncate">
                           {idx + 1}. {member.name || "TBA"}
