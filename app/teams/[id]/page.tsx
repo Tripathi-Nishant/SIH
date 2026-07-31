@@ -4,10 +4,11 @@ import Link from "next/link";
 import { useEffect, useMemo, useState, use } from "react";
 import { useRouter } from "next/navigation";
 import { MockDB, Profile, Team, TeamChatMessage, UserSkill, Skill, TeamMentor, MentorProfile } from "@/lib/db";
-import { isAdminUser } from "@/lib/admin";
 import { addTeamBoardTask, deleteTeamBoardTask, getTeamBoardTasks, TeamTask, updateTeamBoardTask } from "@/lib/team-board";
 import Navbar from "@/components/Navbar";
-import { ArrowLeft, Send, AlertCircle, Edit2, Trash2, Save, ListTodo, Plus, MoveRight, MessageSquare, SendHorizontal, Share2, Copy } from "lucide-react";
+import { ArrowLeft, Send, AlertCircle, Edit2, Trash2, Save, ListTodo, Plus, MoveRight, MessageSquare, SendHorizontal, Share2, Copy, Award } from "lucide-react";
+
+type TeamCertificate = { id: string; certificate_number: string; issued_at: string };
 
 interface PageProps {
   params: Promise<{ id: string }>;
@@ -38,6 +39,7 @@ export default function TeamDetailPage({ params }: PageProps) {
   const [chatLoading, setChatLoading] = useState(true);
   const [chatSending, setChatSending] = useState(false);
   const [shareCopied, setShareCopied] = useState(false);
+  const [certificate, setCertificate] = useState<TeamCertificate | null>(null);
 
   // Join pitch note state
   const [pitch, setPitch] = useState("");
@@ -88,6 +90,11 @@ export default function TeamDetailPage({ params }: PageProps) {
         if (activeUser) {
           const inTeam = allMembers.some(m => m.user_id === activeUser.id);
           setIsUserInAnyTeam(inTeam);
+          if (inTeam) {
+            const certificateResponse = await fetch(`/api/certificates?team_id=${foundTeam.id}`);
+            const certificateData = await certificateResponse.json().catch(() => ({}));
+            setCertificate(certificateData.certificates?.[0] || null);
+          }
         }
       }
     }
@@ -127,7 +134,7 @@ export default function TeamDetailPage({ params }: PageProps) {
     };
   }, [team, user, isCurrentUserOnTeam]);
 
-  const canManageTeam = !!user && !!team && (team.leader_id === user.id || isAdminUser(user));
+  const canManageTeam = !!user && !!team && (team.leader_id === user.id || user.role === "admin");
 
   const handleSaveTeam = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -192,6 +199,23 @@ export default function TeamDetailPage({ params }: PageProps) {
     await navigator.clipboard.writeText(url);
     setShareCopied(true);
     setTimeout(() => setShareCopied(false), 2000);
+  };
+
+  const handleDownloadCertificate = async () => {
+    if (!certificate) return;
+    const response = await fetch(`/api/certificates/download?certificate_id=${certificate.id}`);
+    if (!response.ok) { alert("Certificate download failed."); return; }
+    const url = URL.createObjectURL(await response.blob());
+    const anchor = document.createElement("a");
+    anchor.href = url;
+    anchor.download = `${team?.name || "team"}_certificate.pdf`;
+    anchor.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const handleShareCertificate = () => {
+    if (!team || !certificate) return;
+    window.open(`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(window.location.origin + `/teams/${team.id}/public`)}`, "_blank", "noopener,noreferrer");
   };
 
   const handleSendChat = async (e: React.FormEvent) => {
@@ -382,6 +406,19 @@ export default function TeamDetailPage({ params }: PageProps) {
                 </div>
               )}
             </div>
+
+            {isCurrentUserOnTeam && (
+              <div className="rounded-xl border border-purple-500/20 bg-purple-500/5 p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <div className="flex items-center gap-3">
+                  <Award className="h-5 w-5 text-purple-300" />
+                  <div>
+                    <strong className="block text-sm text-white">Team certificate</strong>
+                    <span className="text-xs text-gray-400">{certificate ? "Issued by the college admin. Download your copy below." : "The certificate will appear here after an admin issues it."}</span>
+                  </div>
+                </div>
+                {certificate && <div className="flex gap-2"><button onClick={handleDownloadCertificate} className="px-3 py-2 rounded-lg bg-purple-500/15 border border-purple-400/20 text-xs font-semibold text-purple-200">Download</button><button onClick={handleShareCertificate} className="px-3 py-2 rounded-lg bg-[#0077b5]/20 border border-[#0077b5]/30 text-xs font-semibold text-blue-200">LinkedIn</button></div>}
+              </div>
+            )}
 
             {isCurrentUserOnTeam && (
               <div className="pt-2 border-t border-white/10 space-y-4">

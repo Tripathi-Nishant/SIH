@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { MockDB, Profile, Team, TeamMember, Skill, UserSkill } from "@/lib/db";
 import { isAdminUser } from "@/lib/admin";
 import Navbar from "@/components/Navbar";
-import { ShieldCheck, BarChart3, AlertCircle, RefreshCw, Mail, Settings } from "lucide-react";
+import { ShieldCheck, BarChart3, AlertCircle, RefreshCw, Mail, Settings, Award } from "lucide-react";
 
 export default function AdminPage() {
   const router = useRouter();
@@ -17,6 +17,8 @@ export default function AdminPage() {
   const [members, setMembers] = useState<TeamMember[]>([]);
   const [reports, setReports] = useState<any[]>([]);
   const [seasonConcluded, setSeasonConcluded] = useState(false);
+  const [certificateCounts, setCertificateCounts] = useState<Record<string, number>>({});
+  const [issuingTeamId, setIssuingTeamId] = useState<string | null>(null);
 
   const loadAdminData = async () => {
     const loggedUser = await MockDB.getCurrentUser();
@@ -42,6 +44,13 @@ export default function AdminPage() {
     setUserSkills(userSkillsData);
     setMembers(membersData);
     setReports(reportsData);
+
+    const certificateResults = await Promise.all(teamsData.map(async (team) => {
+      const response = await fetch(`/api/certificates?team_id=${team.id}`);
+      const data = await response.json().catch(() => ({}));
+      return [team.id, response.ok ? (data.certificates?.length || 0) : 0] as const;
+    }));
+    setCertificateCounts(Object.fromEntries(certificateResults));
   };
 
   useEffect(() => {
@@ -70,6 +79,30 @@ export default function AdminPage() {
     const newVal = !seasonConcluded;
     await MockDB.setSeasonConcluded(newVal);
     setSeasonConcluded(newVal);
+  };
+
+  const handleIssueCertificates = async (teamId: string) => {
+    if (!seasonConcluded) {
+      alert("Conclude the season before issuing certificates.");
+      return;
+    }
+    if (!confirm("Issue certificates to every current member of this team?")) return;
+    setIssuingTeamId(teamId);
+    try {
+      const response = await fetch("/api/certificates", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ team_id: teamId }),
+      });
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(data.error || "Could not issue certificates.");
+      alert(data.message);
+      await loadAdminData();
+    } catch (error: unknown) {
+      alert(error instanceof Error ? error.message : "Could not issue certificates.");
+    } finally {
+      setIssuingTeamId(null);
+    }
   };
 
   const handleOverrideStatus = async (teamId: string, currentStatus: string) => {
@@ -306,9 +339,40 @@ export default function AdminPage() {
                       </div>
                     ))}
                 </div>
-              </div>
-
             </div>
+
+            <div className="glass p-6 rounded-2xl border border-purple-500/20 space-y-4">
+              <div>
+                <h3 className="text-base font-bold text-white flex items-center gap-2">
+                  <Award className="h-5 w-5 text-purple-300" /> Hackathon Certificates
+                </h3>
+                <p className="text-xs text-gray-400 mt-1">Only admins can issue the fixed certificate template to a team.</p>
+              </div>
+              <div className="space-y-2 max-h-[300px] overflow-y-auto pr-1">
+                {teams.map((team) => {
+                  const memberCount = members.filter((member) => member.team_id === team.id).length;
+                  const issuedCount = certificateCounts[team.id] || 0;
+                  const issued = memberCount > 0 && issuedCount === memberCount;
+                  return (
+                    <div key={team.id} className="flex items-center justify-between gap-3 rounded-xl border border-white/10 bg-white/5 p-3">
+                      <div>
+                        <strong className="block text-sm text-white">{team.name}</strong>
+                        <span className="text-[10px] text-gray-400">{issuedCount}/{memberCount} certificates issued</span>
+                      </div>
+                      <button
+                        onClick={() => handleIssueCertificates(team.id)}
+                        disabled={issuingTeamId === team.id || memberCount === 0}
+                        className="px-3 py-2 rounded-lg bg-purple-500/15 border border-purple-400/20 text-xs font-semibold text-purple-200 hover:bg-purple-500/25 disabled:opacity-50"
+                      >
+                        {issuingTeamId === team.id ? "Issuing..." : issued ? "Re-issue / Sync" : "Issue to Team"}
+                      </button>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
+          </div>
           </div>
 
         </div>

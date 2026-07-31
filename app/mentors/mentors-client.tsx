@@ -5,7 +5,6 @@ import Link from "next/link";
 import { useSearchParams, useRouter } from "next/navigation";
 import Navbar from "@/components/Navbar";
 import { MockDB, MentorProfile, Profile, Team, TeamMentor } from "@/lib/db";
-import { isAdminUser } from "@/lib/admin";
 import { Search, GraduationCap, Clock3, MapPin, MessageCircle, PlusCircle, BadgeCheck, ArrowRight, Star } from "lucide-react";
 
 export default function MentorsPageClient() {
@@ -45,7 +44,7 @@ export default function MentorsPageClient() {
     loadData();
   }, [teamId]);
 
-  const canRequestMentor = !!user && !!team && (team.leader_id === user.id || isAdminUser(user));
+  const canRequestMentor = !!user && !!team && (team.leader_id === user.id || user.role === "admin");
 
   const mentorUsage = useMemo(() => {
     const counts = new Map<string, number>();

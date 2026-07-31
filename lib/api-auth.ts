@@ -52,5 +52,9 @@ export function getServiceClient() {
 }
 
 export function isAdminProfile(profile: Profile | null): boolean {
-  return profile?.role === "admin" || profile?.role === "faculty";
+  return profile?.role === "admin";
+}
+
+export function isFacultyProfile(profile: Profile | null): boolean {
+  return profile?.role === "faculty";
 }

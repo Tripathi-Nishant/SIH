@@ -10,6 +10,8 @@ import {
   ShieldAlert, Flag, Star, Send
 } from "lucide-react";
 
+type TeamCertificate = { id: string; certificate_number: string; issued_at: string; team_id: string; user_id: string };
+
 export default function DashboardPage() {
   const router = useRouter();
   const [user, setUser] = useState<Profile | null>(null);
@@ -23,6 +25,7 @@ export default function DashboardPage() {
   const [allUserSkills, setAllUserSkills] = useState<UserSkill[]>([]);
   const [loading, setLoading] = useState(true);
   const [showWelcome, setShowWelcome] = useState(true);
+  const [myCertificate, setMyCertificate] = useState<TeamCertificate | null>(null);
 
   // Peer rating flow states
   const [seasonConcluded, setSeasonConcluded] = useState(false);
@@ -86,6 +89,9 @@ export default function DashboardPage() {
       const userTeam = teams.find(t => t.id === userMemberRecord.team_id);
       if (userTeam) {
         setTeam(userTeam);
+        const certificateResponse = await fetch(`/api/certificates?team_id=${userTeam.id}`);
+        const certificateData = await certificateResponse.json().catch(() => ({}));
+        setMyCertificate(certificateData.certificates?.[0] || null);
         // Load team members details
         const teamMems = members
           .filter(m => m.team_id === userTeam.id)
@@ -101,6 +107,7 @@ export default function DashboardPage() {
     } else {
       setTeam(null);
       setTeamMembers([]);
+      setMyCertificate(null);
     }
 
     // Requests inbox related to this user
@@ -245,6 +252,28 @@ export default function DashboardPage() {
       await MockDB.leaveOrDisbandTeam(team.id);
       await refreshData();
     }
+  };
+
+  const handleDownloadCertificate = async () => {
+    if (!myCertificate) return;
+    const response = await fetch(`/api/certificates/download?certificate_id=${myCertificate.id}`);
+    if (!response.ok) {
+      const data = await response.json().catch(() => ({}));
+      alert(data.error || "Certificate download failed.");
+      return;
+    }
+    const url = URL.createObjectURL(await response.blob());
+    const anchor = document.createElement("a");
+    anchor.href = url;
+    anchor.download = `${team?.name || "team"}_certificate.pdf`;
+    anchor.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const handleShareCertificate = () => {
+    if (!myCertificate || !team) return;
+    const text = `I completed Smart India Hackathon ${new Date(myCertificate.issued_at).getFullYear()} with team ${team.name} at KIET.`;
+    window.open(`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(window.location.origin + `/teams/${team.id}/public`)}&summary=${encodeURIComponent(text)}`, "_blank", "noopener,noreferrer");
   };
 
   const handleDownloadNomination = async () => {
@@ -394,6 +423,22 @@ export default function DashboardPage() {
                   Rate {t.name || t.kiet_email}
                 </button>
               ))}
+            </div>
+          </div>
+        )}
+
+        {myCertificate && team && (
+          <div className="surface-card rounded-2xl p-4 text-purple-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div className="flex items-center gap-3">
+              <Award className="h-5 w-5 text-purple-300" />
+              <div>
+                <span className="font-bold block text-sm">Your hackathon certificate is ready</span>
+                <span className="text-xs text-purple-200/70">Issued by the college admin on {new Date(myCertificate.issued_at).toLocaleDateString("en-IN")}.</span>
+              </div>
+            </div>
+            <div className="flex gap-2">
+              <button onClick={handleDownloadCertificate} className="secondary-btn h-8 px-3 py-0 text-xs">Download PDF</button>
+              <button onClick={handleShareCertificate} className="primary-btn h-8 px-3 py-0 text-xs">Share on LinkedIn</button>
             </div>
           </div>
         )}

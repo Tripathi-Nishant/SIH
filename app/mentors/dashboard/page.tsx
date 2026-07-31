@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import Navbar from "@/components/Navbar";
 import { MockDB, MentorProfile, MentorRequest, Profile, TeamMentor } from "@/lib/db";
-import { isAdminUser } from "@/lib/admin";
+import { isAdminUser, isFacultyUser } from "@/lib/admin";
 import {
   ArrowLeft,
   BookOpen,
@@ -67,7 +67,7 @@ export default function MentorDashboardPage() {
     loadData();
   }, []);
 
-  const canUseHub = !!user && isAdminUser(user);
+  const canUseHub = !!user && (isAdminUser(user) || isFacultyUser(user));
 
   const pendingRequests = useMemo(
     () => requests.filter((request) => request.status === "pending"),
