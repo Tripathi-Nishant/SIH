@@ -133,6 +133,20 @@ export default function Navbar() {
                 );
               })}
 
+              {isAdmin && (
+                <Link
+                  href="/admin"
+                  className={`flex items-center gap-2 px-3 py-2.5 rounded-full text-xs xl:text-sm font-semibold transition-colors shrink-0 whitespace-nowrap border ${
+                    pathname === "/admin"
+                      ? "text-[#eab308] bg-[#eab308]/12 border-[#eab308]/15"
+                      : "text-[#eab308] border-[#eab308]/15 hover:bg-[#eab308]/10"
+                  }`}
+                >
+                  <ShieldAlert className="h-4 w-4" />
+                  Admin Panel
+                </Link>
+              )}
+
               <div className="relative shrink-0">
                 <button
                   type="button"
