@@ -10,6 +10,7 @@ export async function GET(request: NextRequest) {
 
   const { data: certificate } = await supabase.from("team_certificates").select("*").eq("id", certificateId).single();
   if (!certificate) return NextResponse.json({ error: "Certificate not found" }, { status: 404 });
+  if (certificate.status === "revoked") return NextResponse.json({ error: "This certificate has been revoked" }, { status: 410 });
   if (certificate.user_id !== user.id && !isAdminProfile(profile)) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
@@ -28,7 +29,7 @@ export async function GET(request: NextRequest) {
   doc.setDrawColor(16, 185, 129); doc.setLineWidth(1); doc.rect(40, 40, width - 80, height - 80);
   doc.setTextColor(249, 115, 22); doc.setFont("helvetica", "bold"); doc.setFontSize(18);
   doc.text("KIET GROUP OF INSTITUTIONS", width / 2, 100, { align: "center" });
-  doc.setTextColor(255, 255, 255); doc.setFontSize(34); doc.text("CERTIFICATE OF PARTICIPATION", width / 2, 170, { align: "center" });
+  doc.setTextColor(255, 255, 255); doc.setFontSize(34); doc.text(String(certificate.award_title || "CERTIFICATE OF PARTICIPATION").toUpperCase(), width / 2, 170, { align: "center" });
   doc.setFont("helvetica", "normal"); doc.setFontSize(15); doc.setTextColor(190, 200, 215);
   doc.text("This certificate is proudly presented to", width / 2, 220, { align: "center" });
   doc.setFont("helvetica", "bold"); doc.setFontSize(30); doc.setTextColor(255, 255, 255);
@@ -39,7 +40,18 @@ export async function GET(request: NextRequest) {
   doc.text(String(team.name), width / 2, 360, { align: "center" });
   doc.setTextColor(190, 200, 215); doc.setFont("helvetica", "normal"); doc.setFontSize(12);
   doc.text(String(team.problem_statement_title || team.problem_statement_domain || "Hackathon Team"), width / 2, 386, { align: "center" });
-  doc.setFontSize(10); doc.text(`Certificate No. ${certificate.certificate_number}`, 55, height - 58); doc.text(`Issued ${new Date(certificate.issued_at).toLocaleDateString("en-IN")}`, width - 55, height - 58, { align: "right" });
+  doc.setFontSize(10); doc.text(`Certificate No. ${certificate.certificate_number}`, 55, height - 58);
+  const verificationUrl = `${request.nextUrl.origin}/verify/${certificate.verification_token}`;
+  doc.text(`Verify: ${verificationUrl}`, width / 2, height - 58, { align: "center" });
+  doc.text(`Issued ${new Date(certificate.issued_at).toLocaleDateString("en-IN")}`, width - 55, height - 58, { align: "right" });
+  try {
+    const qrResponse = await fetch(`https://api.qrserver.com/v1/create-qr-code/?size=120x120&data=${encodeURIComponent(verificationUrl)}`);
+    if (qrResponse.ok) {
+      const qrBase64 = Buffer.from(await qrResponse.arrayBuffer()).toString("base64");
+      doc.addImage(`data:image/png;base64,${qrBase64}`, "PNG", width - 145, 425, 90, 90);
+      doc.setFontSize(9); doc.text("Scan to verify", width - 100, 525, { align: "center" });
+    }
+  } catch { /* The text verification URL remains available if the QR service is unavailable. */ }
 
   const bytes = doc.output("arraybuffer");
   const filename = `${String(recipient.name || "student").replace(/[^a-z0-9-_]+/gi, "_")}_certificate.pdf`;

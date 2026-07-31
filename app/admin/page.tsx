@@ -18,7 +18,9 @@ export default function AdminPage() {
   const [reports, setReports] = useState<any[]>([]);
   const [seasonConcluded, setSeasonConcluded] = useState(false);
   const [certificateCounts, setCertificateCounts] = useState<Record<string, number>>({});
+  const [certificateRecords, setCertificateRecords] = useState<Record<string, { id: string; user_id: string; status: string }[]>>({});
   const [issuingTeamId, setIssuingTeamId] = useState<string | null>(null);
+  const [awardTitle, setAwardTitle] = useState("Certificate of Participation");
 
   const loadAdminData = async () => {
     const loggedUser = await MockDB.getCurrentUser();
@@ -48,9 +50,10 @@ export default function AdminPage() {
     const certificateResults = await Promise.all(teamsData.map(async (team) => {
       const response = await fetch(`/api/certificates?team_id=${team.id}`);
       const data = await response.json().catch(() => ({}));
-      return [team.id, response.ok ? (data.certificates?.length || 0) : 0] as const;
+      return [team.id, response.ok ? (data.certificates || []) : []] as const;
     }));
-    setCertificateCounts(Object.fromEntries(certificateResults));
+    setCertificateRecords(Object.fromEntries(certificateResults));
+    setCertificateCounts(Object.fromEntries(certificateResults.map(([teamId, certificates]) => [teamId, certificates.filter((certificate: { status: string }) => certificate.status === "active").length])));
   };
 
   useEffect(() => {
@@ -92,7 +95,7 @@ export default function AdminPage() {
       const response = await fetch("/api/certificates", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ team_id: teamId }),
+        body: JSON.stringify({ team_id: teamId, award_title: awardTitle }),
       });
       const data = await response.json().catch(() => ({}));
       if (!response.ok) throw new Error(data.error || "Could not issue certificates.");
@@ -103,6 +106,33 @@ export default function AdminPage() {
     } finally {
       setIssuingTeamId(null);
     }
+  };
+
+  const handleBulkExport = async (teamId: string) => {
+    const response = await fetch(`/api/certificates/bulk?team_id=${teamId}`);
+    if (!response.ok) { const data = await response.json().catch(() => ({})); alert(data.error || "Bulk export failed."); return; }
+    const url = URL.createObjectURL(await response.blob()); const anchor = document.createElement("a"); anchor.href = url; anchor.download = "team-certificates.pdf"; anchor.click(); URL.revokeObjectURL(url);
+  };
+
+  const handlePublishResult = async (team: Team) => {
+    const award = prompt("Achievement title (for example: Winner, Runner-up, Finalist):", team.award_title || "Winner");
+    if (!award) return;
+    const rankText = prompt("Official rank (optional):", team.result_rank?.toString() || "");
+    try {
+      await MockDB.updateTeam(team.id, { award_title: award, result_rank: rankText ? Number(rankText) : undefined, result_published: true } as Partial<Team>);
+      await loadAdminData();
+    } catch (error: unknown) {
+      alert(error instanceof Error ? error.message : "Could not publish result.");
+    }
+  };
+
+  const handleCertificateAction = async (certificateId: string, action: "revoke" | "restore") => {
+    const reason = action === "revoke" ? prompt("Reason for revocation:", "Disqualified by hackathon administration") : undefined;
+    if (action === "revoke" && !reason) return;
+    const response = await fetch("/api/certificates", { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ certificate_id: certificateId, action, reason }) });
+    const data = await response.json().catch(() => ({}));
+    if (!response.ok) { alert(data.error || "Certificate action failed."); return; }
+    await loadAdminData();
   };
 
   const handleOverrideStatus = async (teamId: string, currentStatus: string) => {
@@ -188,6 +218,12 @@ export default function AdminPage() {
             <span className="text-[10px] font-bold text-gray-400 block tracking-wider uppercase">Total Registered</span>
             <span className="text-3xl font-black text-white block mt-1">{totalStudentsCount}</span>
             <p className="text-[10px] text-gray-500 mt-1">KIET verified accounts</p>
+          </div>
+
+          <div className="glass p-5 rounded-2xl border border-purple-500/20">
+            <span className="text-[10px] font-bold text-purple-300 block tracking-wider uppercase">Certificates Issued</span>
+            <span className="text-3xl font-black text-white block mt-1">{Object.values(certificateCounts).reduce((sum, count) => sum + count, 0)}</span>
+            <p className="text-[10px] text-gray-500 mt-1">Across all teams</p>
           </div>
 
           <div className="glass p-5 rounded-2xl border border-white/10">
@@ -348,6 +384,7 @@ export default function AdminPage() {
                 </h3>
                 <p className="text-xs text-gray-400 mt-1">Only admins can issue the fixed certificate template to a team.</p>
               </div>
+              <input value={awardTitle} onChange={(event) => setAwardTitle(event.target.value)} placeholder="Achievement title, e.g. Winner / Participant" className="w-full rounded-lg bg-black/30 border border-white/10 px-3 py-2 text-sm text-white focus:outline-none focus:border-purple-400" />
               <div className="space-y-2 max-h-[300px] overflow-y-auto pr-1">
                 {teams.map((team) => {
                   const memberCount = members.filter((member) => member.team_id === team.id).length;
@@ -366,6 +403,9 @@ export default function AdminPage() {
                       >
                         {issuingTeamId === team.id ? "Issuing..." : issued ? "Re-issue / Sync" : "Issue to Team"}
                       </button>
+                      {issued && <button onClick={() => handleBulkExport(team.id)} className="px-3 py-2 rounded-lg bg-white/5 border border-white/10 text-xs font-semibold text-gray-200 hover:bg-white/10">Bulk PDF</button>}
+                      <button onClick={() => handlePublishResult(team)} className="px-3 py-2 rounded-lg bg-amber-500/10 border border-amber-400/20 text-xs font-semibold text-amber-200 hover:bg-amber-500/20">{team.result_published ? "Edit Result" : "Publish Result"}</button>
+                      {certificateRecords[team.id]?.map((certificate) => <button key={certificate.id} onClick={() => handleCertificateAction(certificate.id, certificate.status === "active" ? "revoke" : "restore")} className="px-2 py-2 rounded-lg bg-red-500/10 border border-red-400/20 text-[10px] font-semibold text-red-200">{certificate.status === "active" ? "Revoke" : "Restore"}</button>)}
                     </div>
                   );
                 })}

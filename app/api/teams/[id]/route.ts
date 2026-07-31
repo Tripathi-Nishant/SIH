@@ -18,6 +18,9 @@ export async function PATCH(request: NextRequest, context: { params: Promise<{ i
     "capacity",
     "status",
     "visibility",
+    "award_title",
+    "result_rank",
+    "result_published",
   ] as const;
 
   for (const field of allowedFields) {
@@ -42,6 +45,10 @@ export async function PATCH(request: NextRequest, context: { params: Promise<{ i
 
   if (updates.visibility !== undefined && !["public", "private"].includes(String(updates.visibility))) {
     return NextResponse.json({ error: "Invalid visibility value" }, { status: 400 });
+  }
+
+  if ((updates.award_title !== undefined || updates.result_rank !== undefined || updates.result_published !== undefined) && !isAdminProfile(profile)) {
+    return NextResponse.json({ error: "Only an admin can publish hackathon results" }, { status: 403 });
   }
 
   const { data: team } = await supabase.from("teams").select("id, leader_id").eq("id", id).single();

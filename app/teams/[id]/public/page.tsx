@@ -183,6 +183,14 @@ export default function PublicTeamPage({ params }: PageProps) {
           </div>
         </section>
 
+        {team.result_published && (team.award_title || team.result_rank) && (
+          <section className="rounded-2xl border border-amber-400/20 bg-amber-400/5 p-6">
+            <div className="text-xs uppercase tracking-[0.2em] font-bold text-amber-300">Hackathon achievement</div>
+            <h2 className="text-2xl font-black text-white mt-2">{team.award_title || `Rank ${team.result_rank}`}</h2>
+            {team.result_rank && <p className="text-sm text-amber-100/70 mt-1">Official result: Rank {team.result_rank}</p>}
+          </section>
+        )}
+
         <section className="grid grid-cols-1 lg:grid-cols-[1.4fr_0.9fr] gap-6">
           <div className="space-y-6">
             <div className="glass rounded-2xl border border-white/10 p-6">

@@ -48,6 +48,9 @@ export interface Team {
   status: "open" | "full" | "locked";
   visibility: "public" | "private";
   created_at: string;
+  award_title?: string | null;
+  result_rank?: number | null;
+  result_published?: boolean;
 }
 
 export interface TeamMember {

@@ -14,6 +14,7 @@ type FeedItem = {
   href?: string;
   tone: "orange" | "green" | "blue" | "slate" | "red";
 };
+type PortalNotification = { id: string; title: string; message: string; href?: string; read_at?: string | null; created_at: string };
 
 export default function NotificationsPage() {
   const [user, setUser] = useState<Profile | null>(null);
@@ -22,6 +23,7 @@ export default function NotificationsPage() {
   const [loading, setLoading] = useState(true);
   const [savedTeams, setSavedTeams] = useState<string[]>([]);
   const [savedStudents, setSavedStudents] = useState<string[]>([]);
+  const [portalNotifications, setPortalNotifications] = useState<PortalNotification[]>([]);
 
   const loadData = async () => {
     setLoading(true);
@@ -34,6 +36,9 @@ export default function NotificationsPage() {
     setUser(currentUser);
     setTeams(teamsData);
     setRequests(requestsData);
+    const notificationResponse = await fetch("/api/notifications");
+    const notificationData = await notificationResponse.json().catch(() => ({}));
+    setPortalNotifications(notificationData.notifications || []);
 
     if (currentUser) {
       setSavedTeams(getSavedTeams(currentUser.id));
@@ -120,7 +125,7 @@ export default function NotificationsPage() {
     { label: "Pending requests", value: requests.filter((r) => r.status === "pending").length, icon: Mail },
     { label: "Saved teams", value: savedTeams.length, icon: Bookmark },
     { label: "Saved students", value: savedStudents.length, icon: Users },
-    { label: "Active items", value: feed.length, icon: Bell },
+    { label: "Active items", value: feed.length + portalNotifications.filter((item) => !item.read_at).length, icon: Bell },
   ];
 
   if (loading) {
@@ -179,6 +184,8 @@ export default function NotificationsPage() {
             );
           })}
         </section>
+
+        {portalNotifications.length > 0 && <section className="glass rounded-2xl border border-purple-500/20 p-6"><h2 className="text-lg font-bold text-white">Portal notifications</h2><div className="mt-4 space-y-2">{portalNotifications.slice(0, 8).map((notification) => <Link key={notification.id} href={notification.href || "/notifications"} onClick={() => { if (!notification.read_at) fetch("/api/notifications", { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id: notification.id }) }); }} className={`block rounded-xl border p-3 ${notification.read_at ? "border-white/5 bg-white/5" : "border-purple-400/20 bg-purple-500/10"}`}><strong className="block text-sm text-white">{notification.title}</strong><span className="text-xs text-gray-400">{notification.message}</span></Link>)}</div></section>}
 
         <section className="grid grid-cols-1 lg:grid-cols-[1.4fr_0.6fr] gap-6">
           <div className="space-y-4">
