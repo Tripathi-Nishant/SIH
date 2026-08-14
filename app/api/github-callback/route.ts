@@ -60,12 +60,18 @@ export async function GET(req: NextRequest) {
       headers: { Authorization: `Bearer ${token}` },
     });
     const githubUser = await userRes.json();
+    if (!userRes.ok || !githubUser.login) {
+      throw new Error(githubUser.message || "GitHub returned an invalid user profile");
+    }
 
     // Fetch repositories
     const reposRes = await fetch("https://api.github.com/user/repos?per_page=10&sort=pushed", {
       headers: { Authorization: `Bearer ${token}` },
     });
     const repos = await reposRes.json();
+    if (!reposRes.ok) {
+      throw new Error(repos?.message || "Could not load GitHub repositories");
+    }
 
     const repoNames = Array.isArray(repos) ? repos.map((r: any) => r.name) : [];
 

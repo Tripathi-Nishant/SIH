@@ -11,6 +11,9 @@ export async function GET(request: NextRequest) {
     supabase.from("user_upvotes_tips").select("tip_id"),
   ]);
 
+  if (pptsRes.error) console.error("Hall of Fame pitch feed error:", pptsRes.error);
+  if (tipsRes.error) console.error("Hall of Fame tips feed error:", tipsRes.error);
+
   const ppts = pptsRes.error ? [] : pptsRes.data || [];
   const tips = tipsRes.error ? [] : tipsRes.data || [];
   const pptVotes = pptVotesRes.error ? [] : pptVotesRes.data || [];

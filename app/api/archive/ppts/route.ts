@@ -64,6 +64,7 @@ export async function POST(request: NextRequest) {
     .single();
 
   if (error || !data) {
+    await supabase.storage.from("archive_ppts").remove([storagePath]);
     return NextResponse.json({ error: error?.message || "Failed to save archive entry" }, { status: 400 });
   }
 

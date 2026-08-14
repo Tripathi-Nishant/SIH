@@ -84,15 +84,35 @@ function OnboardContent() {
     init();
   }, [router, searchParams]);
 
-  const handleSyncGithub = () => {
+  const handleSyncGithub = async () => {
     if (!user) return;
     setLoading(true);
 
-    const clientId = process.env.NEXT_PUBLIC_GITHUB_CLIENT_ID || "your-github-client-id";
-    const redirectUri = `${window.location.origin}/api/github-callback`;
-    
-    // Redirect to GitHub OAuth
-    window.location.href = `https://github.com/login/oauth/authorize?client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}&state=${user.id}&scope=read:user,public_repo`;
+    try {
+      const clientId = process.env.NEXT_PUBLIC_GITHUB_CLIENT_ID?.trim();
+      if (!clientId || clientId === "your-github-client-id") {
+        throw new Error("GitHub OAuth is not configured. Add NEXT_PUBLIC_GITHUB_CLIENT_ID to the app environment.");
+      }
+
+      // The callback verifies a signed state value. Never send the raw user id.
+      const stateResponse = await fetch("/api/github/state", { credentials: "include" });
+      const stateData = await stateResponse.json().catch(() => ({}));
+      if (!stateResponse.ok || !stateData.state) {
+        throw new Error(stateData.error || "Could not start GitHub connection.");
+      }
+
+      const redirectUri = `${window.location.origin}/api/github-callback`;
+      const params = new URLSearchParams({
+        client_id: clientId,
+        redirect_uri: redirectUri,
+        state: stateData.state,
+        scope: "read:user,public_repo",
+      });
+      window.location.assign(`https://github.com/login/oauth/authorize?${params.toString()}`);
+    } catch (err) {
+      setLoading(false);
+      alert(err instanceof Error ? err.message : "Could not connect GitHub.");
+    }
   };
 
   const handleResumeUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -115,7 +135,8 @@ function OnboardContent() {
     try {
       const fileExt = file.name.split('.').pop();
       const fileName = `${user.id}-${Date.now()}.${fileExt}`;
-      const filePath = `resumes/${fileName}`;
+      // Storage RLS expects the first path segment to be the authenticated user id.
+      const filePath = `${user.id}/${fileName}`;
 
       // Upload file to Supabase Storage bucket 'resumes'
       const { data: storageData, error: storageError } = await supabase.storage
@@ -134,18 +155,14 @@ function OnboardContent() {
       });
       const result = await res.json();
 
-      if (result.error) throw new Error(result.error);
+      if (!res.ok || result.error) throw new Error(result.error || "Resume parsing failed.");
 
       setResumeSkills(result.skills || []);
       setResumeUploaded(true);
     } catch (err: any) {
       console.error(err);
-      if (process.env.NODE_ENV === 'development') {
-        setResumeSkills(["TypeScript", "Tailwind CSS", "PostgreSQL", "Git"]);
-        setResumeUploaded(true);
-      } else {
-        alert(`Resume parser failed: ${err.message || "Please configure Supabase storage settings."}`);
-      }
+      setResumeFileName("");
+      alert(`Resume upload failed: ${err instanceof Error ? err.message : "Please try again."}`);
     } finally {
       setLoading(false);
     }
