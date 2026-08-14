@@ -42,16 +42,31 @@ export default function ArchiveSubmitPage() {
 
     setSubmitting(true);
     try {
-      const formData = new FormData();
-      formData.append("file", file);
-      formData.append("team_name", teamName);
-      formData.append("ps_title", psTitle);
-      formData.append("ps_domain", psDomain || "General");
-      formData.append("track", track);
-      formData.append("year", String(year));
-      formData.append("retrospective", retrospective);
+      const presignResponse = await fetch("/api/storage/presign", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ kind: "pitch", fileName: file.name, contentType: file.type, size: file.size }),
+      });
+      const presignData = await presignResponse.json();
+      if (!presignResponse.ok) throw new Error(presignData.error || "Could not prepare pitch upload");
 
-      await MockDB.submitArchivePpt(formData);
+      const uploadResponse = await fetch(presignData.uploadUrl, {
+        method: "PUT",
+        headers: { "Content-Type": file.type },
+        body: file,
+      });
+      if (!uploadResponse.ok) throw new Error("Pitch upload to S3 failed");
+
+      await MockDB.submitArchivePpt({
+        storage_path: presignData.key,
+        team_name: teamName,
+        ps_title: psTitle,
+        ps_domain: psDomain || "General",
+        track,
+        year,
+        retrospective,
+      });
       alert("Pitch deck uploaded to the archive.");
       router.push("/hall-of-fame");
     } catch (err: any) {

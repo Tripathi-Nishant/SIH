@@ -507,10 +507,10 @@ export class MockDB {
     };
   }
 
-  static async submitArchivePpt(formData: FormData): Promise<{ id: string; file_url: string; storage_path: string }> {
+  static async submitArchivePpt(payload: Record<string, unknown>): Promise<{ id: string; file_url: string; storage_path: string }> {
     const res = await fetch("/api/archive/ppts", {
       method: "POST",
-      body: formData,
+      body: JSON.stringify(payload),
       credentials: "include",
     });
 

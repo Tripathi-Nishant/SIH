@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getAuthenticatedUser } from "@/lib/api-auth";
+import { createDownloadUrl } from "@/lib/s3";
 
 export async function GET(request: NextRequest) {
   const { user, supabase } = await getAuthenticatedUser(request);
@@ -14,7 +15,11 @@ export async function GET(request: NextRequest) {
   if (pptsRes.error) console.error("Hall of Fame pitch feed error:", pptsRes.error);
   if (tipsRes.error) console.error("Hall of Fame tips feed error:", tipsRes.error);
 
-  const ppts = pptsRes.error ? [] : pptsRes.data || [];
+  const rawPpts = pptsRes.error ? [] : pptsRes.data || [];
+  const ppts = await Promise.all(rawPpts.map(async (ppt: { storage_path?: string | null; file_url?: string | null; [key: string]: unknown }) => ({
+    ...ppt,
+    file_url: ppt.storage_path ? await createDownloadUrl(ppt.storage_path).catch(() => "") : ppt.file_url,
+  })));
   const tips = tipsRes.error ? [] : tipsRes.data || [];
   const pptVotes = pptVotesRes.error ? [] : pptVotesRes.data || [];
   const tipVotes = tipVotesRes.error ? [] : tipVotesRes.data || [];

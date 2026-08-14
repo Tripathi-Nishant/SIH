@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getAuthenticatedUser, getServiceClient, isAdminProfile } from "@/lib/api-auth";
+import { deleteS3Object } from "@/lib/s3";
 
 export async function DELETE(request: NextRequest, context: { params: Promise<{ id: string }> }) {
   const { id } = await context.params;
@@ -26,7 +27,11 @@ export async function DELETE(request: NextRequest, context: { params: Promise<{ 
   const db = isAdminProfile(profile) ? getServiceClient() : supabase;
 
   if (entry.storage_path) {
-    await db.storage.from("archive_ppts").remove([entry.storage_path]);
+    if (entry.storage_path.startsWith("pitch/")) {
+      await deleteS3Object(entry.storage_path).catch(() => undefined);
+    } else {
+      await db.storage.from("archive_ppts").remove([entry.storage_path]);
+    }
   }
 
   const { error } = await db.from("archive_ppts").delete().eq("id", id);

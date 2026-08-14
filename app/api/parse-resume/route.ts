@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getAuthenticatedUser } from "@/lib/api-auth";
 import { RESUME_SKILL_NAMES } from "@/lib/skills";
+import { downloadS3Object } from "@/lib/s3";
 
 export async function POST(request: NextRequest) {
   const { user } = await getAuthenticatedUser(request);
@@ -8,23 +9,17 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const formData = await request.formData();
-  const file = formData.get("file") as Blob | null;
-
-  if (!file) {
-    return NextResponse.json({ error: "No file uploaded" }, { status: 400 });
-  }
-
-  if (file.type !== "application/pdf") {
-    return NextResponse.json({ error: "Only PDF files are supported" }, { status: 400 });
-  }
-
-  if (file.size > 5 * 1024 * 1024) {
-    return NextResponse.json({ error: "File must be under 5MB" }, { status: 400 });
+  const body = await request.json();
+  const storagePath = String(body.storage_path || "").trim();
+  if (!storagePath.startsWith(`resume/${user.id}/`)) {
+    return NextResponse.json({ error: "Invalid resume storage path" }, { status: 400 });
   }
 
   try {
-    const buffer = Buffer.from(await file.arrayBuffer());
+    const object = await downloadS3Object(storagePath);
+    if (!object.Body) throw new Error("Resume file could not be read");
+    const buffer = Buffer.from(await object.Body.transformToByteArray());
+    if (buffer.length > 5 * 1024 * 1024) throw new Error("File must be under 5MB");
     const pdf = require("pdf-parse");
     const parsed = await pdf(buffer);
     const text = parsed.text as string;

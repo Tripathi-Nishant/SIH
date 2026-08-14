@@ -3,7 +3,6 @@
 import { useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { MockDB, Profile, Skill, UserSkill } from "@/lib/db";
-import { supabase } from "@/lib/supabaseClient";
 import { Github, FileText, CheckCircle, ArrowRight, ArrowLeft, X, GraduationCap, Link2, Sparkles } from "lucide-react";
 
 function OnboardContent() {
@@ -133,25 +132,28 @@ function OnboardContent() {
     setResumeFileName(file.name);
 
     try {
-      const fileExt = file.name.split('.').pop();
-      const fileName = `${user.id}-${Date.now()}.${fileExt}`;
-      // Storage RLS expects the first path segment to be the authenticated user id.
-      const filePath = `${user.id}/${fileName}`;
+      const presignResponse = await fetch("/api/storage/presign", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ kind: "resume", fileName: file.name, contentType: file.type, size: file.size }),
+      });
+      const presignData = await presignResponse.json();
+      if (!presignResponse.ok) throw new Error(presignData.error || "Could not prepare resume upload");
 
-      // Upload file to Supabase Storage bucket 'resumes'
-      const { data: storageData, error: storageError } = await supabase.storage
-        .from('resumes')
-        .upload(filePath, file, { upsert: true });
-
-      if (storageError) throw storageError;
+      const uploadResponse = await fetch(presignData.uploadUrl, {
+        method: "PUT",
+        headers: { "Content-Type": file.type },
+        body: file,
+      });
+      if (!uploadResponse.ok) throw new Error("Resume upload to S3 failed");
 
       // Extract skills from PDF text
-      const formData = new FormData();
-      formData.append("file", file);
-
       const res = await fetch("/api/parse-resume", {
         method: "POST",
-        body: formData,
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ storage_path: presignData.key }),
       });
       const result = await res.json();
 
