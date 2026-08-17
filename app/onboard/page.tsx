@@ -132,14 +132,28 @@ function OnboardContent() {
     setResumeFileName(file.name);
 
     try {
+      const readApiResponse = async <T,>(response: Response): Promise<T> => {
+        const body = await response.text();
+        try {
+          return JSON.parse(body) as T;
+        } catch {
+          throw new Error(
+            response.ok
+              ? "The upload service returned an invalid response. Please try again."
+              : `The upload service is unavailable (HTTP ${response.status}). Please try again.`
+          );
+        }
+      };
+
       const presignResponse = await fetch("/api/storage/presign", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
         body: JSON.stringify({ kind: "resume", fileName: file.name, contentType: file.type, size: file.size }),
       });
-      const presignData = await presignResponse.json();
+      const presignData = await readApiResponse<{ uploadUrl?: string; key?: string; error?: string }>(presignResponse);
       if (!presignResponse.ok) throw new Error(presignData.error || "Could not prepare resume upload");
+      if (!presignData.uploadUrl || !presignData.key) throw new Error("Could not prepare resume upload");
 
       const uploadResponse = await fetch(presignData.uploadUrl, {
         method: "PUT",
@@ -155,7 +169,7 @@ function OnboardContent() {
         credentials: "include",
         body: JSON.stringify({ storage_path: presignData.key }),
       });
-      const result = await res.json();
+      const result = await readApiResponse<{ skills?: string[]; error?: string }>(res);
 
       if (!res.ok || result.error) throw new Error(result.error || "Resume parsing failed.");
 

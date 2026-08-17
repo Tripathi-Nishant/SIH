@@ -16,10 +16,10 @@ const FILE_RULES = {
 } as const;
 
 export async function POST(request: NextRequest) {
-  const { user } = await getAuthenticatedUser(request);
-  if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-
   try {
+    const { user } = await getAuthenticatedUser(request);
+    if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
     const body = await request.json();
     const kind = body.kind as keyof typeof FILE_RULES;
     const rule = FILE_RULES[kind];

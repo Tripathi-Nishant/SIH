@@ -5,18 +5,18 @@ import { downloadS3Object } from "@/lib/s3";
 import { PDFParse } from "pdf-parse";
 
 export async function POST(request: NextRequest) {
-  const { user } = await getAuthenticatedUser(request);
-  if (!user) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
-
-  const body = await request.json();
-  const storagePath = String(body.storage_path || "").trim();
-  if (!storagePath.startsWith(`resume/${user.id}/`)) {
-    return NextResponse.json({ error: "Invalid resume storage path" }, { status: 400 });
-  }
-
   try {
+    const { user } = await getAuthenticatedUser(request);
+    if (!user) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const body = await request.json();
+    const storagePath = String(body.storage_path || "").trim();
+    if (!storagePath.startsWith(`resume/${user.id}/`)) {
+      return NextResponse.json({ error: "Invalid resume storage path" }, { status: 400 });
+    }
+
     const object = await downloadS3Object(storagePath);
     if (!object.Body) throw new Error("Resume file could not be read");
     const buffer = Buffer.from(await object.Body.transformToByteArray());
