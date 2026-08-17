@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getAuthenticatedUser } from "@/lib/api-auth";
 import { RESUME_SKILL_NAMES } from "@/lib/skills";
 import { downloadS3Object } from "@/lib/s3";
+import { PDFParse } from "pdf-parse";
 
 export async function POST(request: NextRequest) {
   const { user } = await getAuthenticatedUser(request);
@@ -20,9 +21,16 @@ export async function POST(request: NextRequest) {
     if (!object.Body) throw new Error("Resume file could not be read");
     const buffer = Buffer.from(await object.Body.transformToByteArray());
     if (buffer.length > 5 * 1024 * 1024) throw new Error("File must be under 5MB");
-    const pdf = require("pdf-parse");
-    const parsed = await pdf(buffer);
-    const text = parsed.text as string;
+    // Use pdf-parse's Node API. The legacy callable API loads the browser
+    // PDF.js build and can fail on the server with "DOMMatrix is not defined".
+    const parser = new PDFParse({ data: buffer });
+    let text: string;
+    try {
+      const parsed = await parser.getText();
+      text = parsed.text;
+    } finally {
+      await parser.destroy();
+    }
 
     const detectedSkills: string[] = [];
     for (const skill of RESUME_SKILL_NAMES) {
@@ -38,3 +46,4 @@ export async function POST(request: NextRequest) {
 }
 
 export const dynamic = "force-dynamic";
+export const runtime = "nodejs";
